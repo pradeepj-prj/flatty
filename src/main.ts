@@ -222,7 +222,8 @@ const walls: Wall[] = [
   { from: [344.5, 179.1], to: [344.5, 253.9] },
   { from: [425.2, 179.1], to: [425.2, 253.9] },
   { from: [344.5, 253.9], to: [515.8, 253.9] },
-  { from: [371.1, 263.6], to: [371.1, 362.2] },
+
+  // The kitchen and service yard are one open space with no partition wall.
 
   // Photo-observed accent finish in the main bedroom.
   { from: [387.8, 0], to: [525.1, 0], finish: 'accentTaupe' },
