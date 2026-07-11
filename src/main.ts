@@ -209,6 +209,7 @@ const walls: Wall[] = [
   { from: [240.2, 371.25], to: [230.2, 371.25] },
   { from: [230.2, 446.85], to: [88.6, 446.85], finish: 'accentRust' },
   { from: [88.6, 371.25], to: [88.6, 446.85] },
+  { from: [88.6, 371.25], to: [106, 371.25] },
   { from: [230.2, 371.25], to: [230.2, 446.85] },
   { from: [0, livingFacadeZIn], to: [0, 237] },
   { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
