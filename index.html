@@ -17,9 +17,27 @@
           <button class="control-button display-toggle" data-display="dimensions" type="button" aria-pressed="false">Dimensions</button>
         </div>
       </header>
-      <section id="viewport" aria-label="Flat model viewport">
-        <canvas id="scene"></canvas>
-      </section>
+      <div id="workspace">
+        <aside id="furniture-library" aria-label="Furniture library">
+          <div class="library-heading">
+            <p class="eyebrow">Space planner</p>
+            <h1>Furniture</h1>
+            <p>Select an item, then click the 2D floor to place it.</p>
+          </div>
+          <div id="furniture-catalog" aria-label="Available furniture"></div>
+          <p id="furniture-status" role="status">Choose an item to start.</p>
+          <div id="furniture-selection-controls" hidden>
+            <span id="selected-furniture-name"></span>
+            <div class="selection-actions">
+              <button id="rotate-furniture" class="library-action" type="button">Rotate 15°</button>
+              <button id="delete-furniture" class="library-action danger" type="button">Delete</button>
+            </div>
+          </div>
+        </aside>
+        <section id="viewport" aria-label="Flat model viewport">
+          <canvas id="scene"></canvas>
+        </section>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
