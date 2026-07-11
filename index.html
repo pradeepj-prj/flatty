@@ -6,10 +6,13 @@
     <title>Flatty</title>
   </head>
   <body>
-    <div id="app">
+    <main id="app">
       <canvas id="scene"></canvas>
-      <aside id="panel"></aside>
-    </div>
+      <nav id="view-modes" aria-label="View mode">
+        <button class="view-mode is-active" data-view="2d" type="button" aria-pressed="true">2D</button>
+        <button class="view-mode" data-view="3d" type="button" aria-pressed="false">3D</button>
+      </nav>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

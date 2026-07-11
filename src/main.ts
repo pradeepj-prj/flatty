@@ -34,6 +34,7 @@ const viewStyle = {
   floor: '#a9784f',
   wall: '#ffffff',
   windows: '#d8dde2',
+  edges: '#475569',
 } satisfies Record<string, Color>
 
 type Color = `#${string}`
@@ -53,6 +54,7 @@ type Room = {
   widthIn: number
   depthIn: number
   floor: keyof typeof finishes
+  floorOutlineIn?: Array<[number, number]>
   notes?: string
 }
 
@@ -65,14 +67,6 @@ type Wall = {
 }
 
 type NavigationMode = 'rotate' | 'translate'
-
-type DimensionOverlay = {
-  label: string
-  valueIn: number
-  from: [number, number, number]
-  to: [number, number, number]
-  color?: Color
-}
 
 const finishes = {
   livingFloor: {
@@ -158,6 +152,14 @@ const rooms: Room[] = [
     widthIn: 134.2,
     depthIn: 371.25 - bedroomDatumZIn,
     floor: 'livingFloor',
+    floorOutlineIn: [
+      [106, bedroomDatumZIn],
+      [240.2, bedroomDatumZIn],
+      [240.2, 362.2],
+      [230.2, 362.2],
+      [230.2, 371.25],
+      [106, 371.25],
+    ],
   },
   {
     name: 'Bedroom 2',
@@ -268,79 +270,14 @@ const walls: Wall[] = [
   { from: [387.8, 0], to: [mainBedroomRightXIn, 0], finish: 'accentTaupe' },
 ]
 
-const measurements = [
-  ['Ceiling height', wallHeightIn, 'red measured ceiling height'],
-  ['Bedroom 3 width', 106, 'blue measured usable width'],
-  ['Bedroom 3 depth', 166.5, 'blue measured usable depth'],
-  ['Bedroom 2 width', 122, 'blue measured usable width'],
-  ['Bedroom 2 depth', 124.9, 'blue measured usable depth'],
-  ['Main bedroom width', 137.3, 'blue measured usable width'],
-  ['Main bedroom depth', mainBedroomBackZIn, 'blue measured usable depth'],
-  ['Main bedroom lower width', mainBedroomLowerWidthIn, 'blue measured usable width'],
-  ['Main bedroom doorway', mainBedroomDoorWidthIn, 'blue measured opening'],
-  ['Bath / WC 2 width', bathroom2WidthIn, 'blue approximate modeled width'],
-  ['Bath / WC 1 width', bathroom1WidthIn, 'blue approximate modeled width'],
-  ['Bathroom depth', bathroomDepthIn, 'blue measured usable depth'],
-  ['Study width', 141.6, 'blue measured usable width'],
-  ['Study depth', 75.6, 'blue measured usable depth'],
-  ['Kitchen / service span', 194.4, 'blue measured span across kitchen/service side'],
-  ['Kitchen depth', 98.6, 'blue measured usable depth'],
-] as const
-
-const dimensionOverlays: DimensionOverlay[] = [
-  { label: 'Bedroom 3 width', valueIn: 106, from: [0, 2, 165], to: [106, 2, 165] },
-  { label: 'Bedroom 3 depth', valueIn: 166.5, from: [12, 2, livingFacadeZIn], to: [12, 2, bedroom3BackZIn] },
-  { label: 'Open living span', valueIn: 231.5, from: [0, 2, 82], to: [231.5, 2, 82] },
-  { label: 'Living depth', valueIn: livingDepthIn, from: [225, 2, livingFacadeZIn], to: [225, 2, bedroomDatumZIn] },
-  { label: 'Bedroom 2 width', valueIn: 122, from: [265.8, 2, 18], to: [387.8, 2, 18] },
-  { label: 'Bedroom 2 depth', valueIn: bedroomDatumZIn, from: [277, 2, 0], to: [277, 2, bedroomDatumZIn] },
-  { label: 'Main bedroom width', valueIn: 137.3, from: [387.8, 2, 18], to: [525.1, 2, 18] },
-  {
-    label: 'Main bedroom depth',
-    valueIn: mainBedroomBackZIn,
-    from: [400, 2, 0],
-    to: [400, 2, mainBedroomBackZIn],
-  },
-  {
-    label: 'Bath / WC 2 width',
-    valueIn: bathroom2WidthIn,
-    from: [bathroom2LeftXIn, 2, 240],
-    to: [bathroomDividerXIn, 2, 240],
-  },
-  {
-    label: 'Bath / WC 1 width',
-    valueIn: bathroom1WidthIn,
-    from: [bathroomDividerXIn, 2, 240],
-    to: [bathroom1RightXIn, 2, 240],
-  },
-  {
-    label: 'Bathroom depth',
-    valueIn: bathroomDepthIn,
-    from: [355, 2, bathroomFrontZIn],
-    to: [355, 2, bathroomBackZIn],
-  },
-  { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
-  { label: 'Kitchen depth', valueIn: 98.6, from: [255, 2, 263.6], to: [255, 2, 362.2] },
-  { label: 'Study width', valueIn: 141.6, from: [88.6, 2, 390], to: [230.2, 2, 390] },
-  { label: 'Study depth', valueIn: 75.6, from: [102, 2, 371.25], to: [102, 2, 446.85] },
-  {
-    label: 'Ceiling height',
-    valueIn: wallHeightIn,
-    from: [72, 0, 245],
-    to: [72, wallHeightIn, 245],
-    color: '#dc2626',
-  },
-]
-
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
-const panelElement = document.querySelector<HTMLElement>('#panel')
+const viewButtons = document.querySelectorAll<HTMLButtonElement>('.view-mode')
 
-if (!canvasElement || !panelElement) {
-  throw new Error('Flatty could not find the scene canvas or info panel.')
+if (!canvasElement || viewButtons.length === 0) {
+  throw new Error('Flatty could not find the scene canvas or view controls.')
 }
 
 const canvas = canvasElement
-const panel = panelElement
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(viewStyle.background)
@@ -361,6 +298,12 @@ camera2d.up.set(0, 0, -1)
 camera2d.lookAt(m(planCenter.xIn), 0, m(planCenter.zIn))
 let activeCamera: THREE.Camera = camera2d
 
+const roomFloors: THREE.Mesh[] = []
+const roomDimensionOverlays = new Map<Room, THREE.Group>()
+const raycaster = new THREE.Raycaster()
+const pointer = new THREE.Vector2()
+let hoveredRoom: Room | undefined
+
 const controls = new OrbitControls(camera3d, renderer.domElement)
 controls.enableDamping = true
 controls.target.set(m(planCenter.xIn), 0, m(planCenter.zIn))
@@ -380,7 +323,7 @@ scene.add(sun)
 
 validateRoomInterference(rooms)
 buildFlat()
-renderPanel()
+bindViewControls()
 resize()
 renderer.setAnimationLoop(() => {
   if (controls.enabled) controls.update()
@@ -396,8 +339,15 @@ function buildFlat() {
   flat.add(createBaseFloor())
 
   for (const room of rooms) {
-    flat.add(createFloor(room))
+    const floor = createFloor(room)
+    floor.userData.room = room
+    roomFloors.push(floor)
+    flat.add(floor)
     flat.add(createRoomLabel(room))
+
+    const dimensions = createRoomDimensionOverlay(room)
+    roomDimensionOverlays.set(room, dimensions)
+    flat.add(dimensions)
   }
 
   for (const wall of walls) {
@@ -405,7 +355,21 @@ function buildFlat() {
   }
 
   flat.add(createNorthLightWindowStrip())
-  flat.add(createMeasurementOverlay())
+  addModelEdges(flat)
+}
+
+function addModelEdges(model: THREE.Group) {
+  const material = new THREE.LineBasicMaterial({
+    color: viewStyle.edges,
+    transparent: true,
+    opacity: 0.72,
+  })
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(object.geometry), material)
+    edges.name = `${object.name} edges`
+    object.add(edges)
+  })
 }
 
 function createBaseFloor() {
@@ -425,15 +389,7 @@ function createBaseFloor() {
     [0, livingFacadeZIn],
     [240.2, livingFacadeZIn],
   ]
-  const shape = new THREE.Shape()
-  outline.forEach(([xIn, zIn], index) => {
-    const action = index === 0 ? shape.moveTo.bind(shape) : shape.lineTo.bind(shape)
-    action(m(xIn), m(zIn))
-  })
-  shape.closePath()
-
-  const geometry = new THREE.ShapeGeometry(shape)
-  geometry.rotateX(Math.PI / 2)
+  const geometry = createFloorOutlineGeometry(outline)
   const material = materialFor('livingFloor')
   material.side = THREE.DoubleSide
   const mesh = new THREE.Mesh(geometry, material)
@@ -444,12 +400,33 @@ function createBaseFloor() {
 }
 
 function createFloor(room: Room) {
-  const geometry = new THREE.BoxGeometry(m(room.widthIn), 0.04, m(room.depthIn))
-  const mesh = new THREE.Mesh(geometry, materialFor(room.floor))
+  const geometry = room.floorOutlineIn
+    ? createFloorOutlineGeometry(room.floorOutlineIn)
+    : new THREE.BoxGeometry(m(room.widthIn), 0.04, m(room.depthIn))
+  const material = materialFor(room.floor)
+  if (room.floorOutlineIn) material.side = THREE.DoubleSide
+  const mesh = new THREE.Mesh(geometry, material)
   mesh.name = `${room.name} floor`
-  mesh.position.set(m(room.xIn + room.widthIn / 2), -0.02, m(room.zIn + room.depthIn / 2))
+  if (room.floorOutlineIn) {
+    mesh.position.y = 0.001
+  } else {
+    mesh.position.set(m(room.xIn + room.widthIn / 2), -0.02, m(room.zIn + room.depthIn / 2))
+  }
   mesh.receiveShadow = true
   return mesh
+}
+
+function createFloorOutlineGeometry(outlineIn: Array<[number, number]>) {
+  const shape = new THREE.Shape()
+  outlineIn.forEach(([xIn, zIn], index) => {
+    if (index === 0) shape.moveTo(m(xIn), m(zIn))
+    else shape.lineTo(m(xIn), m(zIn))
+  })
+  shape.closePath()
+
+  const geometry = new THREE.ShapeGeometry(shape)
+  geometry.rotateX(Math.PI / 2)
+  return geometry
 }
 
 function createWall(wall: Wall, allWalls: Wall[]) {
@@ -535,45 +512,55 @@ function createNorthLightWindowStrip() {
   return group
 }
 
-function createMeasurementOverlay() {
+function createRoomDimensionOverlay(room: Room) {
   const overlay = new THREE.Group()
-  overlay.name = 'measurement overlay'
+  overlay.name = `${room.name} dimensions`
+  overlay.visible = false
 
-  for (const dimension of dimensionOverlays) {
-    const color = dimension.color ?? '#1677d2'
-    const start = pointInMeters(dimension.from)
-    const end = pointInMeters(dimension.to)
-    const direction = end.clone().sub(start).normalize()
-    const tickDirection = Math.abs(direction.y) > 0.8
-      ? new THREE.Vector3(1, 0, 0)
-      : new THREE.Vector3(-direction.z, 0, direction.x).normalize()
-
-    overlay.add(createDimensionLine([start, end], color))
-    overlay.add(createDimensionLine([
-      start.clone().addScaledVector(tickDirection, m(-3)),
-      start.clone().addScaledVector(tickDirection, m(3)),
-    ], color))
-    overlay.add(createDimensionLine([
-      end.clone().addScaledVector(tickDirection, m(-3)),
-      end.clone().addScaledVector(tickDirection, m(3)),
-    ], color))
-
-    const labelPosition = start.clone().lerp(end, 0.5)
-    if (Math.abs(direction.y) > 0.8) {
-      labelPosition.x += m(23)
-    } else {
-      labelPosition.addScaledVector(tickDirection, m(7))
-      labelPosition.y += m(4)
-    }
-
-    overlay.add(createTextSprite(
-      `${dimension.valueIn}\" · ${m(dimension.valueIn).toFixed(2)} m`,
-      labelPosition,
-      color,
-    ))
-  }
+  const heightIn = 2
+  const widthLineZIn = room.zIn + Math.min(18, room.depthIn * 0.2)
+  const depthLineXIn = room.xIn + room.widthIn - Math.min(18, room.widthIn * 0.2)
+  addDimension(
+    overlay,
+    room.widthIn,
+    [room.xIn, heightIn, widthLineZIn],
+    [room.xIn + room.widthIn, heightIn, widthLineZIn],
+  )
+  addDimension(
+    overlay,
+    room.depthIn,
+    [depthLineXIn, heightIn, room.zIn],
+    [depthLineXIn, heightIn, room.zIn + room.depthIn],
+  )
 
   return overlay
+}
+
+function addDimension(
+  overlay: THREE.Group,
+  valueIn: number,
+  from: [number, number, number],
+  to: [number, number, number],
+) {
+  const color: Color = '#1677d2'
+  const start = pointInMeters(from)
+  const end = pointInMeters(to)
+  const direction = end.clone().sub(start).normalize()
+  const tickDirection = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
+
+  overlay.add(createDimensionLine([start, end], color))
+  overlay.add(createDimensionLine([
+    start.clone().addScaledVector(tickDirection, m(-3)),
+    start.clone().addScaledVector(tickDirection, m(3)),
+  ], color))
+  overlay.add(createDimensionLine([
+    end.clone().addScaledVector(tickDirection, m(-3)),
+    end.clone().addScaledVector(tickDirection, m(3)),
+  ], color))
+
+  const labelPosition = start.clone().lerp(end, 0.5).addScaledVector(tickDirection, m(7))
+  labelPosition.y += m(4)
+  overlay.add(createTextSprite(`${valueIn}\" · ${m(valueIn).toFixed(2)} m`, labelPosition, color))
 }
 
 function createDimensionLine(points: THREE.Vector3[], color: Color) {
@@ -692,92 +679,46 @@ function roundRect(context: CanvasRenderingContext2D, x: number, y: number, w: n
   context.closePath()
 }
 
-function renderPanel() {
-  panel.innerHTML = `
-    <h1>Flatty draft model</h1>
-    <p>Start with the orthographic 2D plan to verify room alignment and measurements, then switch to the 3D model.</p>
-    <span class="badge">Draft: dimensions may have small measurement error</span>
-
-    <h2>View</h2>
-    <div class="view-modes">
-      <button class="view-mode is-active" data-view="2d" type="button">2D plan</button>
-      <button class="view-mode" data-view="3d" type="button">3D model</button>
-    </div>
-
-    <h2>3D navigation mode</h2>
-    <div class="navigation-modes">
-      <button class="navigation-mode is-active" data-mode="rotate" type="button">Rotate</button>
-      <button class="navigation-mode" data-mode="translate" type="button">Translate</button>
-    </div>
-    <button class="overlay-toggle" type="button">Hide dimensions</button>
-
-    <h2>How to view</h2>
-    <ul>
-      <li>Choose Rotate or Translate, then drag with the primary mouse button.</li>
-      <li>Scroll or pinch to zoom.</li>
-      <li>The secondary mouse button performs the other navigation action.</li>
-    </ul>
-
-    <h2>Measurement overlay</h2>
-    <ul>
-      <li><strong style="color:#60a5fa">Blue</strong>: floor-plane laser measurements.</li>
-      <li><strong style="color:#f87171">Red</strong>: measured ceiling height.</li>
-      <li>Labels show inches first, then metres.</li>
-    </ul>
-
-    <h2>Measured values</h2>
-    <table class="measurement-table">
-      <thead><tr><th>Item</th><th>In</th><th>M</th></tr></thead>
-      <tbody>
-        ${measurements
-          .map(([label, inches]) => `<tr><td>${label}</td><td>${inches}</td><td>${m(inches).toFixed(2)}</td></tr>`)
-          .join('')}
-      </tbody>
-    </table>
-
-    <h2>Display style</h2>
-    <ul>
-      <li>Floors use an oak-brown finish, with a cool-grey floor distinguishing the household shelter.</li>
-      <li>Walls use a white finish; measurements use blue for the floor plane and red for ceiling height.</li>
-      <li>Existing loose furniture is intentionally omitted for now.</li>
-    </ul>
-  `
-
-  const viewButtons = panel.querySelectorAll<HTMLButtonElement>('.view-mode')
-  const navigationButtons = panel.querySelectorAll<HTMLButtonElement>('.navigation-mode')
+function bindViewControls() {
   viewButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const view = button.dataset.view as '2d' | '3d'
-      setViewMode(view)
-      viewButtons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button))
+      if (button.dataset.view === '2d' || button.dataset.view === '3d') {
+        setViewMode(button.dataset.view)
+      }
     })
   })
-
-  navigationButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const mode = button.dataset.mode as NavigationMode
-      setNavigationMode(mode)
-      navigationButtons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button))
-    })
-  })
-
-  const toggle = panel.querySelector<HTMLButtonElement>('.overlay-toggle')
-  const overlay = scene.getObjectByName('measurement overlay')
-  toggle?.addEventListener('click', () => {
-    if (!overlay) return
-    overlay.visible = !overlay.visible
-    toggle.textContent = overlay.visible ? 'Hide dimensions' : 'Show dimensions'
-  })
-
+  canvas.addEventListener('pointermove', showHoveredRoomDimensions)
+  canvas.addEventListener('pointerleave', () => setHoveredRoom(undefined))
   setViewMode('2d')
+}
+
+function showHoveredRoomDimensions(event: PointerEvent) {
+  const bounds = canvas.getBoundingClientRect()
+  pointer.set(
+    ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+    -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+  )
+  raycaster.setFromCamera(pointer, activeCamera)
+  const room = raycaster.intersectObjects(roomFloors)[0]?.object.userData.room as Room | undefined
+  setHoveredRoom(room)
+}
+
+function setHoveredRoom(room: Room | undefined) {
+  if (room === hoveredRoom) return
+  if (hoveredRoom) roomDimensionOverlays.get(hoveredRoom)!.visible = false
+  hoveredRoom = room
+  if (hoveredRoom) roomDimensionOverlays.get(hoveredRoom)!.visible = true
 }
 
 function setViewMode(view: '2d' | '3d') {
   const is3d = view === '3d'
   activeCamera = is3d ? camera3d : camera2d
   controls.enabled = is3d
-  panel.querySelectorAll<HTMLButtonElement>('.navigation-mode').forEach((button) => {
-    button.disabled = !is3d
+  setHoveredRoom(undefined)
+  viewButtons.forEach((button) => {
+    const isActive = button.dataset.view === view
+    button.classList.toggle('is-active', isActive)
+    button.setAttribute('aria-pressed', String(isActive))
   })
 }
 
