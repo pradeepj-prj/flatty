@@ -205,12 +205,15 @@ const walls: Wall[] = [
   { from: [0, livingFacadeZIn], to: [240.2, livingFacadeZIn] },
   { from: [525.6, 0], to: [525.6, 253.9] },
   { from: [426.2, 362.2], to: [240.2, 362.2] },
+  { from: [240.2, 362.2], to: [240.2, 371.25] },
+  { from: [240.2, 371.25], to: [230.2, 371.25] },
   { from: [230.2, 446.85], to: [88.6, 446.85], finish: 'accentRust' },
   { from: [88.6, 371.25], to: [88.6, 446.85] },
   { from: [230.2, 371.25], to: [230.2, 446.85] },
   { from: [0, livingFacadeZIn], to: [0, 237] },
   { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
   { from: [0, 237], to: [106, 237] },
+  { from: [106, 237], to: [106, 371.25] },
 
   // Partitions. Door gaps are intentionally approximate and left open.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
@@ -224,10 +227,6 @@ const walls: Wall[] = [
   { from: [425.2, 179.1], to: [425.2, 253.9] },
   { from: [344.5, 253.9], to: [525.6, 253.9] },
   { from: [426.2, 253.9], to: [426.2, 362.2] },
-
-  // Partition between study and entry/circulation.
-  { from: [106, 371.25], to: [145, 371.25] },
-  { from: [175, 371.25], to: [230.2, 371.25] },
 
   // The kitchen and service yard are one open space with no partition wall.
 
