@@ -21,13 +21,14 @@ const mainBedroomLowerWidthIn = 115.5
 const mainBedroomLowerWallStartXIn = mainBedroomRightXIn - mainBedroomLowerWidthIn
 const mainBedroomDoorWidthIn = 35.5
 const mainBedroomDoorStartZIn = mainBedroomBackZIn - mainBedroomDoorWidthIn
-const bathroom2LeftXIn = 344.5
-const bathroom2WidthIn = 86.6
+const bedroom2DoorStartXIn = 327.6
+const bedroom2DoorEndXIn = 360.3
+const bathroom2LeftXIn = bedroom2DoorStartXIn
+const bathroom2DoorEndXIn = bedroom2DoorEndXIn
+const bathroom2WidthIn = 95
 const bathroomDividerXIn = bathroom2LeftXIn + bathroom2WidthIn
-const bathroom1WidthIn = 84.7
-const bathroom1RightXIn = bathroomDividerXIn + bathroom1WidthIn
-const bathroom2DoorWidthIn = 30
-const bathroom2DoorEndXIn = bathroom2LeftXIn + bathroom2DoorWidthIn
+const bathroom1RightXIn = 515.8
+const bathroom1WidthIn = bathroom1RightXIn - bathroomDividerXIn
 const viewStyle = {
   background: '#e5e7eb',
   floor: '#a9784f',
@@ -244,8 +245,8 @@ const walls: Wall[] = [
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
   { from: [387.8, 0], to: [387.8, mainBedroomDoorStartZIn] },
-  { from: [240.2, bedroomDatumZIn], to: [327.6, bedroomDatumZIn] },
-  { from: [360.3, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
+  { from: [240.2, bedroomDatumZIn], to: [bedroom2DoorStartXIn, bedroomDatumZIn] },
+  { from: [bedroom2DoorEndXIn, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
   {
     from: [bathroom2DoorEndXIn, bedroomBathroomWallZIn],
     to: [450, bedroomBathroomWallZIn],
