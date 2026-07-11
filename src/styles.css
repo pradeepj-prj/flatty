@@ -159,6 +159,10 @@ body {
   border-radius: 6px;
 }
 
+.furniture-card-shape.beadTable {
+  border-radius: 999px;
+}
+
 .furniture-card-copy {
   min-width: 0;
 }

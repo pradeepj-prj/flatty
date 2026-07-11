@@ -21,7 +21,7 @@ npm run dev
 
 Then open the URL printed by Vite. The app starts in the orthographic **2D plan** view; use the toolbar above the model to switch to the **3D model** or toggle room labels and dimensions. Click a door in either view to smoothly open or close it; open doors stop at 45°.
 
-The furniture library contains procedural test models for a queen bed, three-seat sofa, dining table, and dining chair. Select an item and click the 2D floor to place it. Placed furniture can be dragged, rotated, or deleted and appears in both views. Placements are saved in the browser automatically.
+The furniture library contains procedural test models for a queen bed, three-seat sofa, dining table, sculpted dining table (white pill top on orange ball legs), and dining chair. Select an item and click the 2D floor to place it. Placed furniture can be dragged, rotated, or deleted and appears in both views. Placements are saved in the browser automatically.
 
 ## Build
 

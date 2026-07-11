@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
-export type FurnitureKind = 'bed' | 'sofa' | 'table' | 'chair'
+export type FurnitureKind = 'bed' | 'sofa' | 'table' | 'chair' | 'beadTable'
 
 export type FurnitureDefinition = {
   id: string
@@ -60,6 +60,17 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#9a6845', secondary: '#5f412f' },
   },
   {
+    // Reference: white painted stadium top on chunky orange solid-wood ball legs, 100 x 60 x 75 cm.
+    id: 'sculpted-dining-table',
+    name: 'Sculpted Dining Table',
+    category: 'Tables',
+    kind: 'beadTable',
+    widthIn: 39.4,
+    depthIn: 23.6,
+    heightIn: 29.5,
+    colors: { primary: '#f2ede4', secondary: '#d08a54' },
+  },
+  {
     id: 'dining-chair',
     name: 'Dining Chair',
     category: 'Seating',
@@ -78,6 +89,7 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   if (definition.kind === 'bed') buildBed(group, definition, m)
   if (definition.kind === 'sofa') buildSofa(group, definition, m)
   if (definition.kind === 'table') buildTable(group, definition, m)
+  if (definition.kind === 'beadTable') buildBeadTable(group, definition, m)
   if (definition.kind === 'chair') buildChair(group, definition, m)
 
   group.traverse((object) => {
@@ -191,6 +203,50 @@ function buildTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMe
   }
 }
 
+function buildBeadTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const topThicknessIn = 1.8
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const legColor = item.colors.secondary ?? item.colors.primary
+
+  // Stadium (pill) tabletop: a centre box capped by a cylinder at each short end.
+  const endRadiusIn = item.depthIn / 2
+  const centerLengthIn = Math.max(0.01, item.widthIn - item.depthIn)
+  addBox(group, centerLengthIn, topThicknessIn, item.depthIn, 0, topYIn, 0, item.colors.primary, m)
+  for (const xIn of [-centerLengthIn / 2, centerLengthIn / 2]) {
+    addCylinder(group, endRadiusIn, topThicknessIn, xIn, topYIn, 0, item.colors.primary, m)
+  }
+
+  const legHeightIn = item.heightIn - topThicknessIn
+  const legXIn = item.widthIn / 2 - 8
+  const legZIn = item.depthIn / 2 - 6
+  for (const xIn of [-legXIn, legXIn]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      buildBeadLeg(group, xIn, zIn, legHeightIn, legColor, m)
+    }
+  }
+}
+
+function buildBeadLeg(
+  group: THREE.Group,
+  xIn: number,
+  zIn: number,
+  legHeightIn: number,
+  color: string,
+  m: InchesToMeters,
+) {
+  const beadRatios = [1, 0.93, 0.87, 0.8]
+  const overlap = 0.9
+  const centers: number[] = [beadRatios[0]]
+  for (let index = 1; index < beadRatios.length; index += 1) {
+    centers.push(centers[index - 1] + (beadRatios[index - 1] + beadRatios[index]) * overlap)
+  }
+  const naturalHeight = centers[centers.length - 1] + beadRatios[beadRatios.length - 1]
+  const scale = legHeightIn / naturalHeight
+  beadRatios.forEach((ratio, index) => {
+    addSphere(group, ratio * scale, xIn, centers[index] * scale, zIn, color, m)
+  })
+}
+
 function buildChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const seatHeightIn = 18
   const seatThicknessIn = 2.5
@@ -257,6 +313,41 @@ function addRoundedBox(
   )
   mesh.position.set(m(xIn), m(yIn), m(zIn))
   mesh.rotation.x = rotationX
+  group.add(mesh)
+}
+
+function addCylinder(
+  group: THREE.Group,
+  radiusIn: number,
+  heightIn: number,
+  xIn: number,
+  yIn: number,
+  zIn: number,
+  color: string,
+  m: InchesToMeters,
+) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(m(radiusIn), m(radiusIn), m(heightIn), 28),
+    furnitureMaterial(color),
+  )
+  mesh.position.set(m(xIn), m(yIn), m(zIn))
+  group.add(mesh)
+}
+
+function addSphere(
+  group: THREE.Group,
+  radiusIn: number,
+  xIn: number,
+  yIn: number,
+  zIn: number,
+  color: string,
+  m: InchesToMeters,
+) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(m(radiusIn), 22, 16),
+    furnitureMaterial(color),
+  )
+  mesh.position.set(m(xIn), m(yIn), m(zIn))
   group.add(mesh)
 }
 
