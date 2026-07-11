@@ -13,33 +13,30 @@ body {
 }
 
 #app {
-  position: relative;
-}
-
-#scene {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#view-modes {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+#model-toolbar {
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #111827;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
+}
+
+.control-group {
+  display: flex;
   gap: 4px;
   padding: 4px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.88);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.24);
-  transform: translateX(-50%);
-  backdrop-filter: blur(8px);
 }
 
-.view-mode {
+.control-button {
   min-width: 72px;
   padding: 8px 16px;
   border: 1px solid transparent;
@@ -52,18 +49,41 @@ body {
   font-weight: 600;
 }
 
-.view-mode:hover {
+.control-button:hover {
   color: #f8fafc;
   background: rgba(51, 65, 85, 0.7);
 }
 
-.view-mode.is-active {
+.control-button.is-active {
   border-color: rgba(96, 165, 250, 0.75);
   color: #eff6ff;
   background: rgba(30, 64, 175, 0.72);
 }
 
-.view-mode:focus-visible {
+.control-button:focus-visible {
   outline: 2px solid #93c5fd;
   outline-offset: 2px;
+}
+
+#viewport {
+  position: relative;
+  min-height: 0;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 520px) {
+  #model-toolbar {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .control-button {
+    min-width: 0;
+    padding-inline: 10px;
+  }
 }

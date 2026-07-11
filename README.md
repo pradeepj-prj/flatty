@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-Then open the URL printed by Vite. The app starts in the orthographic **2D plan** view; use the controls at the top to switch to the **3D model**. Room dimensions are hidden until you hover over a room. Click a door in either view to smoothly open or close it; open doors stop at 45°.
+Then open the URL printed by Vite. The app starts in the orthographic **2D plan** view; use the toolbar above the model to switch to the **3D model** or toggle room labels and dimensions. Click a door in either view to smoothly open or close it; open doors stop at 45°.
 
 ## Build
 
