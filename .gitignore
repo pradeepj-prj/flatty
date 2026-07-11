@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+
+# Local measurement/source files with private flat details. Keep in working copy only.
+07-254@822409.pdf
+409B photos/
+measurements
