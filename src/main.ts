@@ -2,6 +2,12 @@ import './styles.css'
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import {
+  createFurnitureModel,
+  furnitureCatalog,
+  type FurnitureDefinition,
+  type FurniturePlacement,
+} from './furniture'
 
 const INCH_TO_METER = 0.0254
 const wallHeightIn = 101.7
@@ -115,6 +121,12 @@ type DoorModel = {
 }
 
 type NavigationMode = 'rotate' | 'translate'
+
+type FurnitureModel = {
+  placement: FurniturePlacement
+  definition: FurnitureDefinition
+  group: THREE.Group
+}
 
 const finishes = {
   livingFloor: {
@@ -453,12 +465,34 @@ const doors: Door[] = [
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
 const viewButtons = document.querySelectorAll<HTMLButtonElement>('.view-mode')
 const displayButtons = document.querySelectorAll<HTMLButtonElement>('.display-toggle')
+const furnitureCatalogElement = document.querySelector<HTMLElement>('#furniture-catalog')
+const furnitureStatusElement = document.querySelector<HTMLElement>('#furniture-status')
+const furnitureSelectionControls = document.querySelector<HTMLElement>('#furniture-selection-controls')
+const selectedFurnitureNameElement = document.querySelector<HTMLElement>('#selected-furniture-name')
+const rotateFurnitureButton = document.querySelector<HTMLButtonElement>('#rotate-furniture')
+const deleteFurnitureButton = document.querySelector<HTMLButtonElement>('#delete-furniture')
 
-if (!canvasElement || viewButtons.length === 0 || displayButtons.length === 0) {
+if (
+  !canvasElement
+  || viewButtons.length === 0
+  || displayButtons.length === 0
+  || !furnitureCatalogElement
+  || !furnitureStatusElement
+  || !furnitureSelectionControls
+  || !selectedFurnitureNameElement
+  || !rotateFurnitureButton
+  || !deleteFurnitureButton
+) {
   throw new Error('Flatty could not find the scene canvas or model controls.')
 }
 
 const canvas = canvasElement
+const furnitureCatalogPanel = furnitureCatalogElement
+const furnitureStatus = furnitureStatusElement
+const selectedFurnitureControls = furnitureSelectionControls
+const selectedFurnitureName = selectedFurnitureNameElement
+const rotateFurniture = rotateFurnitureButton
+const deleteFurniture = deleteFurnitureButton
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(viewStyle.background)
@@ -486,10 +520,20 @@ const doorHitAreas: THREE.Mesh[] = []
 const doorPlanGraphics: THREE.Object3D[] = []
 const windowLightBeams: THREE.Mesh[] = []
 const windowLightMaterials: THREE.ShaderMaterial[] = []
+const floorHitAreas: THREE.Object3D[] = []
+const furnitureModels: FurnitureModel[] = []
+const furnitureLayer = new THREE.Group()
+furnitureLayer.name = 'Furniture placements'
+scene.add(furnitureLayer)
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 const clock = new THREE.Clock()
 let doorPointerDown: [number, number] | undefined
+let activeFurnitureDefinitionId: string | undefined
+let selectedFurnitureModel: FurnitureModel | undefined
+let draggedFurnitureModel: FurnitureModel | undefined
+let furnitureDragOffsetIn: [number, number] = [0, 0]
+let furnitureSelectionBox: THREE.BoxHelper | undefined
 
 const controls = new OrbitControls(camera3d, renderer.domElement)
 controls.enableDamping = true
@@ -511,6 +555,8 @@ scene.add(sun)
 validateRoomInterference(rooms)
 validateWindowOpenings(windows, walls)
 buildFlat()
+buildFurnitureLibrary()
+restoreFurniturePlacements()
 bindViewControls()
 resize()
 renderer.setAnimationLoop(() => {
@@ -590,6 +636,7 @@ function createBaseFloor() {
   mesh.name = 'continuous base floor'
   mesh.position.y = -0.045
   mesh.receiveShadow = true
+  floorHitAreas.push(mesh)
   return mesh
 }
 
@@ -1229,28 +1276,161 @@ function bindViewControls() {
       }
     })
   })
-  canvas.addEventListener('pointermove', showDoorPointer)
-  canvas.addEventListener('pointerdown', rememberDoorPointerDown)
-  canvas.addEventListener('pointerup', toggleClickedDoor)
-  canvas.addEventListener('pointercancel', () => { doorPointerDown = undefined })
+  canvas.addEventListener('pointermove', handleScenePointerMove)
+  canvas.addEventListener('pointerdown', handleScenePointerDown)
+  canvas.addEventListener('pointerup', handleScenePointerUp)
+  canvas.addEventListener('pointercancel', cancelScenePointer)
   canvas.addEventListener('pointerleave', () => {
-    doorPointerDown = undefined
-    canvas.style.cursor = ''
+    if (!draggedFurnitureModel) canvas.style.cursor = ''
   })
+  rotateFurniture.addEventListener('click', rotateSelectedFurniture)
+  deleteFurniture.addEventListener('click', deleteSelectedFurniture)
+  window.addEventListener('keydown', handleFurnitureKeydown)
   setViewMode('2d')
   setOverlayVisibility('labels', false)
   setOverlayVisibility('dimensions', false)
 }
 
-function showDoorPointer(event: PointerEvent) {
+function buildFurnitureLibrary() {
+  for (const definition of furnitureCatalog) {
+    const button = document.createElement('button')
+    button.className = 'furniture-card'
+    button.type = 'button'
+    button.dataset.furnitureId = definition.id
+    button.setAttribute('aria-pressed', 'false')
+
+    const preview = document.createElement('span')
+    preview.className = 'furniture-card-preview'
+    const shape = document.createElement('span')
+    shape.className = `furniture-card-shape ${definition.kind}`
+    const longestSideIn = Math.max(definition.widthIn, definition.depthIn)
+    shape.style.setProperty('--preview-width', `${Math.max(14, definition.widthIn / longestSideIn * 34)}px`)
+    shape.style.setProperty('--preview-depth', `${Math.max(14, definition.depthIn / longestSideIn * 34)}px`)
+    shape.style.setProperty('--preview-color', definition.colors.primary)
+    preview.append(shape)
+
+    const copy = document.createElement('span')
+    copy.className = 'furniture-card-copy'
+    const name = document.createElement('span')
+    name.className = 'furniture-card-name'
+    name.textContent = definition.name
+    const detail = document.createElement('span')
+    detail.className = 'furniture-card-detail'
+    detail.textContent = `${definition.widthIn} × ${definition.depthIn} in · ${Math.round(definition.widthIn * 2.54)} × ${Math.round(definition.depthIn * 2.54)} cm`
+    copy.append(name, detail)
+    button.append(preview, copy)
+    button.addEventListener('click', () => chooseFurnitureToPlace(definition))
+    furnitureCatalogPanel.append(button)
+  }
+}
+
+function chooseFurnitureToPlace(definition: FurnitureDefinition) {
+  activeFurnitureDefinitionId = definition.id
+  selectFurnitureModel(undefined)
+  setViewMode('2d')
+  furnitureStatus.textContent = `${definition.name} selected. Click anywhere on the floor to place it.`
+  updateFurnitureCatalogSelection()
+  canvas.style.cursor = 'crosshair'
+}
+
+function addFurniturePlacement(placement: FurniturePlacement) {
+  const definition = furnitureCatalog.find((item) => item.id === placement.furnitureId)
+  if (!definition) return undefined
+
+  const group = createFurnitureModel(definition, m)
+  group.position.set(m(placement.xIn), 0, m(placement.zIn))
+  group.rotation.y = THREE.MathUtils.degToRad(placement.rotationDegrees)
+  const model: FurnitureModel = { placement, definition, group }
+  group.traverse((object) => { object.userData.furnitureModel = model })
+  furnitureModels.push(model)
+  furnitureLayer.add(group)
+  return model
+}
+
+function handleScenePointerMove(event: PointerEvent) {
+  if (draggedFurnitureModel) {
+    const floorPoint = floorPointAtPointer(event)
+    if (floorPoint) {
+      draggedFurnitureModel.placement.xIn = floorPoint[0] + furnitureDragOffsetIn[0]
+      draggedFurnitureModel.placement.zIn = floorPoint[1] + furnitureDragOffsetIn[1]
+      draggedFurnitureModel.group.position.set(
+        m(draggedFurnitureModel.placement.xIn),
+        0,
+        m(draggedFurnitureModel.placement.zIn),
+      )
+      furnitureSelectionBox?.update()
+    }
+    canvas.style.cursor = 'grabbing'
+    return
+  }
+
+  if (activeFurnitureDefinitionId && activeCamera === camera2d) {
+    canvas.style.cursor = floorPointAtPointer(event) ? 'crosshair' : 'not-allowed'
+    return
+  }
+
+  const furniture = furnitureModelAtPointer(event)
+  if (furniture) {
+    canvas.style.cursor = activeCamera === camera2d ? 'grab' : 'pointer'
+    return
+  }
   canvas.style.cursor = doorModelAtPointer(event) ? 'pointer' : ''
 }
 
-function rememberDoorPointerDown(event: PointerEvent) {
-  if (event.button === 0) doorPointerDown = [event.clientX, event.clientY]
+function handleScenePointerDown(event: PointerEvent) {
+  if (event.button !== 0) return
+
+  if (activeFurnitureDefinitionId && activeCamera === camera2d) {
+    const floorPoint = floorPointAtPointer(event)
+    const definition = furnitureCatalog.find((item) => item.id === activeFurnitureDefinitionId)
+    if (!floorPoint || !definition) return
+
+    const model = addFurniturePlacement({
+      id: crypto.randomUUID(),
+      furnitureId: definition.id,
+      xIn: floorPoint[0],
+      zIn: floorPoint[1],
+      rotationDegrees: 0,
+    })
+    activeFurnitureDefinitionId = undefined
+    updateFurnitureCatalogSelection()
+    selectFurnitureModel(model)
+    saveFurniturePlacements()
+    furnitureStatus.textContent = `${definition.name} placed. Drag it to move or use Rotate 15°.`
+    return
+  }
+
+  const furniture = furnitureModelAtPointer(event)
+  if (furniture) {
+    selectFurnitureModel(furniture)
+    doorPointerDown = undefined
+    if (activeCamera === camera2d) {
+      const floorPoint = floorPointAtPointer(event)
+      if (floorPoint) {
+        draggedFurnitureModel = furniture
+        furnitureDragOffsetIn = [
+          furniture.placement.xIn - floorPoint[0],
+          furniture.placement.zIn - floorPoint[1],
+        ]
+        canvas.setPointerCapture(event.pointerId)
+      }
+    }
+    return
+  }
+
+  selectFurnitureModel(undefined)
+  doorPointerDown = [event.clientX, event.clientY]
 }
 
-function toggleClickedDoor(event: PointerEvent) {
+function handleScenePointerUp(event: PointerEvent) {
+  if (draggedFurnitureModel) {
+    draggedFurnitureModel = undefined
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
+    saveFurniturePlacements()
+    canvas.style.cursor = ''
+    return
+  }
+
   const start = doorPointerDown
   doorPointerDown = undefined
   if (!start || Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5) return
@@ -1259,14 +1439,138 @@ function toggleClickedDoor(event: PointerEvent) {
   if (model) model.isOpen = !model.isOpen
 }
 
+function cancelScenePointer() {
+  doorPointerDown = undefined
+  if (draggedFurnitureModel) saveFurniturePlacements()
+  draggedFurnitureModel = undefined
+}
+
+function furnitureModelAtPointer(event: PointerEvent) {
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, activeCamera)
+  return raycaster.intersectObjects(furnitureLayer.children, true)[0]?.object.userData.furnitureModel as FurnitureModel | undefined
+}
+
+function floorPointAtPointer(event: PointerEvent): [number, number] | undefined {
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, activeCamera)
+  const point = raycaster.intersectObjects(floorHitAreas)[0]?.point
+  return point ? [point.x / INCH_TO_METER, point.z / INCH_TO_METER] : undefined
+}
+
 function doorModelAtPointer(event: PointerEvent) {
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, activeCamera)
+  return raycaster.intersectObjects(doorHitAreas)[0]?.object.userData.doorModel as DoorModel | undefined
+}
+
+function setScenePointer(event: PointerEvent) {
   const bounds = canvas.getBoundingClientRect()
   pointer.set(
     ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
     -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
   )
-  raycaster.setFromCamera(pointer, activeCamera)
-  return raycaster.intersectObjects(doorHitAreas)[0]?.object.userData.doorModel as DoorModel | undefined
+}
+
+function selectFurnitureModel(model: FurnitureModel | undefined) {
+  selectedFurnitureModel = model
+  selectedFurnitureControls.hidden = !model
+  selectedFurnitureName.textContent = model?.definition.name ?? ''
+
+  if (furnitureSelectionBox) {
+    scene.remove(furnitureSelectionBox)
+    furnitureSelectionBox.geometry.dispose()
+    furnitureSelectionBox.material.dispose()
+    furnitureSelectionBox = undefined
+  }
+  if (model) {
+    furnitureSelectionBox = new THREE.BoxHelper(model.group, '#60a5fa')
+    furnitureSelectionBox.name = `${model.definition.name} selection`
+    furnitureSelectionBox.material.depthTest = false
+    furnitureSelectionBox.renderOrder = 30
+    scene.add(furnitureSelectionBox)
+  }
+}
+
+function rotateSelectedFurniture() {
+  if (!selectedFurnitureModel) return
+  selectedFurnitureModel.placement.rotationDegrees = (selectedFurnitureModel.placement.rotationDegrees + 15) % 360
+  selectedFurnitureModel.group.rotation.y = THREE.MathUtils.degToRad(selectedFurnitureModel.placement.rotationDegrees)
+  furnitureSelectionBox?.update()
+  saveFurniturePlacements()
+}
+
+function deleteSelectedFurniture() {
+  const model = selectedFurnitureModel
+  if (!model) return
+
+  furnitureLayer.remove(model.group)
+  const index = furnitureModels.indexOf(model)
+  if (index >= 0) furnitureModels.splice(index, 1)
+  model.group.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return
+    object.geometry.dispose()
+    if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose())
+    else object.material.dispose()
+  })
+  selectFurnitureModel(undefined)
+  saveFurniturePlacements()
+  furnitureStatus.textContent = `${model.definition.name} removed.`
+}
+
+function handleFurnitureKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && activeFurnitureDefinitionId) {
+    activeFurnitureDefinitionId = undefined
+    updateFurnitureCatalogSelection()
+    furnitureStatus.textContent = 'Placement cancelled. Choose an item to start.'
+    canvas.style.cursor = ''
+  } else if ((event.key === 'Delete' || event.key === 'Backspace') && selectedFurnitureModel) {
+    event.preventDefault()
+    deleteSelectedFurniture()
+  }
+}
+
+function updateFurnitureCatalogSelection() {
+  furnitureCatalogPanel.querySelectorAll<HTMLButtonElement>('.furniture-card').forEach((button) => {
+    const isActive = button.dataset.furnitureId === activeFurnitureDefinitionId
+    button.classList.toggle('is-active', isActive)
+    button.setAttribute('aria-pressed', String(isActive))
+  })
+}
+
+function saveFurniturePlacements() {
+  localStorage.setItem(
+    'flatty.furniturePlacements.v1',
+    JSON.stringify(furnitureModels.map((model) => model.placement)),
+  )
+}
+
+function restoreFurniturePlacements() {
+  const savedValue = localStorage.getItem('flatty.furniturePlacements.v1')
+  if (!savedValue) return
+
+  try {
+    const savedPlacements: unknown = JSON.parse(savedValue)
+    if (!Array.isArray(savedPlacements)) return
+
+    for (const value of savedPlacements) {
+      if (!isFurniturePlacement(value)) continue
+      addFurniturePlacement(value)
+    }
+  } catch (error) {
+    console.warn('Flatty could not restore saved furniture.', error)
+  }
+}
+
+function isFurniturePlacement(value: unknown): value is FurniturePlacement {
+  if (!value || typeof value !== 'object') return false
+  const placement = value as Partial<FurniturePlacement>
+  return typeof placement.id === 'string'
+    && typeof placement.furnitureId === 'string'
+    && furnitureCatalog.some((item) => item.id === placement.furnitureId)
+    && Number.isFinite(placement.xIn)
+    && Number.isFinite(placement.zIn)
+    && Number.isFinite(placement.rotationDegrees)
 }
 
 function setOverlayVisibility(option: 'labels' | 'dimensions', visible: boolean) {
