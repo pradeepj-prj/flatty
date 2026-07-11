@@ -22,6 +22,7 @@ type Color = `#${string}`
 type Finish = {
   name: string
   color: Color
+  modelColor?: Color
   texture?: 'wood' | 'plain'
   plankColor?: Color
 }
@@ -73,6 +74,12 @@ const finishes = {
   bathFloor: {
     name: 'light neutral bathroom floor',
     color: '#d6d1c8',
+    texture: 'plain',
+  },
+  shelterFloor: {
+    name: 'cool grey household shelter floor',
+    color: '#cbd5e1',
+    modelColor: '#cbd5e1',
     texture: 'plain',
   },
   wall: {
@@ -155,7 +162,7 @@ const rooms: Room[] = [
     zIn: bedroom3BackZIn,
     widthIn: 106,
     depthIn: 50.6,
-    floor: 'bathFloor',
+    floor: 'shelterFloor',
   },
   {
     name: 'Bath / WC 2',
@@ -213,6 +220,7 @@ const walls: Wall[] = [
   { from: [230.2, 371.25], to: [230.2, 446.85] },
   { from: [0, livingFacadeZIn], to: [0, 237] },
   { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
+  { from: [106, bedroom3BackZIn], to: [106, 237] },
   { from: [0, 237], to: [106, 237] },
   { from: [106, 237], to: [106, 371.25] },
 
@@ -560,9 +568,16 @@ function validateRoomInterference(roomData: Room[]) {
 }
 
 function materialFor(key: keyof typeof finishes) {
-  const floorFinishes: Array<keyof typeof finishes> = ['livingFloor', 'bedroomFloor', 'kitchenFloor', 'bathFloor']
+  const finish: Finish = finishes[key]
+  const floorFinishes: Array<keyof typeof finishes> = [
+    'livingFloor',
+    'bedroomFloor',
+    'kitchenFloor',
+    'bathFloor',
+    'shelterFloor',
+  ]
   return new THREE.MeshStandardMaterial({
-    color: floorFinishes.includes(key) ? viewStyle.floor : viewStyle.wall,
+    color: finish.modelColor ?? (floorFinishes.includes(key) ? viewStyle.floor : viewStyle.wall),
     roughness: 0.86,
     metalness: 0,
   })
@@ -623,8 +638,8 @@ function renderPanel() {
 
     <h2>Display style</h2>
     <ul>
-      <li>Floors use a near-white finish and walls use a contrasting neutral grey.</li>
-      <li>Only measurement annotations retain color: blue for the floor plane and red for ceiling height.</li>
+      <li>Floors use a near-white finish, with a cool-grey floor distinguishing the household shelter.</li>
+      <li>Walls use a contrasting neutral grey; measurements use blue for the floor plane and red for ceiling height.</li>
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
   `
