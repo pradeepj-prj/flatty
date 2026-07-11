@@ -83,12 +83,14 @@ body {
   font-size: 12px;
 }
 
+.view-modes,
 .navigation-modes {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
+.view-mode,
 .navigation-mode,
 .overlay-toggle {
   padding: 9px 12px;
@@ -101,11 +103,18 @@ body {
   font-size: 13px;
 }
 
+.view-mode:hover,
+.view-mode.is-active,
 .navigation-mode:hover,
 .navigation-mode.is-active,
 .overlay-toggle:hover {
   border-color: rgba(96, 165, 250, 0.9);
   background: rgba(30, 64, 175, 0.46);
+}
+
+.navigation-mode:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
 }
 
 .overlay-toggle {

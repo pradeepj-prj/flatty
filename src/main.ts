@@ -6,6 +6,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const INCH_TO_METER = 0.0254
 const wallHeightIn = 101.7
 const wallThicknessIn = 4.5
+const bedroomDatumZIn = 124.9
+const livingDepthIn = 105
+const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
+const bedroom3BackZIn = livingFacadeZIn + 166.5
 const viewStyle = {
   background: '#dfe4ea',
   model: '#f7f7f4',
@@ -106,7 +110,7 @@ const rooms: Room[] = [
   {
     name: 'Bedroom 3',
     xIn: 0,
-    zIn: 0,
+    zIn: livingFacadeZIn,
     widthIn: 106,
     depthIn: 166.5,
     floor: 'bedroomFloor',
@@ -115,25 +119,25 @@ const rooms: Room[] = [
   {
     name: 'Living / Dining',
     xIn: 106,
-    zIn: 0,
+    zIn: livingFacadeZIn,
     widthIn: 134.2,
-    depthIn: 166.5,
+    depthIn: livingDepthIn,
     floor: 'livingFloor',
   },
   {
     name: 'Entry / Circulation',
     xIn: 106,
-    zIn: 166.5,
+    zIn: bedroomDatumZIn,
     widthIn: 134.2,
-    depthIn: 204.75,
+    depthIn: 371.25 - bedroomDatumZIn,
     floor: 'livingFloor',
   },
   {
     name: 'Bedroom 2',
-    xIn: 240.2,
+    xIn: 265.8,
     zIn: 0,
     widthIn: 122,
-    depthIn: 124.9,
+    depthIn: bedroomDatumZIn,
     floor: 'bedroomFloor',
   },
   {
@@ -147,7 +151,7 @@ const rooms: Room[] = [
   {
     name: 'Household Shelter',
     xIn: 0,
-    zIn: 166.5,
+    zIn: bedroom3BackZIn,
     widthIn: 106,
     depthIn: 50.6,
     floor: 'bathFloor',
@@ -196,22 +200,23 @@ const rooms: Room[] = [
 
 const walls: Wall[] = [
   // Main facade and exterior shell, simplified from the HDB plan.
-  { from: [0, 0], to: [525.6, 0] },
+  { from: [240.2, 0], to: [525.6, 0] },
+  { from: [0, livingFacadeZIn], to: [240.2, livingFacadeZIn] },
   { from: [525.6, 0], to: [525.6, 253.9] },
   { from: [426.2, 362.2], to: [240.2, 362.2] },
   { from: [230.2, 446.85], to: [88.6, 446.85], finish: 'accentRust' },
   { from: [88.6, 371.25], to: [88.6, 446.85] },
   { from: [230.2, 371.25], to: [230.2, 446.85] },
-  { from: [0, 0], to: [0, 217.1] },
-  { from: [0, 166.5], to: [106, 166.5] },
-  { from: [0, 217.1], to: [106, 217.1] },
+  { from: [0, livingFacadeZIn], to: [0, 237] },
+  { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
+  { from: [0, 237], to: [106, 237] },
 
   // Partitions. Door gaps are intentionally approximate and left open.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
-  { from: [387.8, 0], to: [387.8, 135] },
-  { from: [240.2, 124.9], to: [327.6, 124.9] },
-  { from: [360.3, 124.9], to: [362.2, 124.9] },
+  { from: [387.8, 0], to: [387.8, 173] },
+  { from: [240.2, bedroomDatumZIn], to: [327.6, bedroomDatumZIn] },
+  { from: [360.3, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
   { from: [387.8, 173], to: [450, 173] },
   { from: [480, 173], to: [525.1, 173] },
   { from: [344.5, 179.1], to: [344.5, 253.9] },
@@ -238,12 +243,12 @@ const measurements = [
 ] as const
 
 const dimensionOverlays: DimensionOverlay[] = [
-  { label: 'Bedroom 3 width', valueIn: 106, from: [0, 2, 145], to: [106, 2, 145] },
-  { label: 'Bedroom 3 depth', valueIn: 166.5, from: [12, 2, 0], to: [12, 2, 166.5] },
+  { label: 'Bedroom 3 width', valueIn: 106, from: [0, 2, 165], to: [106, 2, 165] },
+  { label: 'Bedroom 3 depth', valueIn: 166.5, from: [12, 2, livingFacadeZIn], to: [12, 2, bedroom3BackZIn] },
   { label: 'Open living span', valueIn: 231.5, from: [0, 2, 82], to: [231.5, 2, 82] },
-  { label: 'Living depth', valueIn: 105, from: [225, 2, 0], to: [225, 2, 105] },
-  { label: 'Bedroom 2 width', valueIn: 122, from: [240.2, 2, 18], to: [362.2, 2, 18] },
-  { label: 'Bedroom 2 depth', valueIn: 124.9, from: [252, 2, 0], to: [252, 2, 124.9] },
+  { label: 'Living depth', valueIn: livingDepthIn, from: [225, 2, livingFacadeZIn], to: [225, 2, bedroomDatumZIn] },
+  { label: 'Bedroom 2 width', valueIn: 122, from: [265.8, 2, 18], to: [387.8, 2, 18] },
+  { label: 'Bedroom 2 depth', valueIn: bedroomDatumZIn, from: [277, 2, 0], to: [277, 2, bedroomDatumZIn] },
   { label: 'Main bedroom width', valueIn: 137.3, from: [387.8, 2, 18], to: [525.1, 2, 18] },
   { label: 'Main bedroom depth', valueIn: 173, from: [400, 2, 0], to: [400, 2, 173] },
   { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
@@ -279,16 +284,23 @@ renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 const planCenter = { xIn: 262.8, zIn: 223.4 }
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
-camera.position.set(m(planCenter.xIn), 18, m(planCenter.zIn) + 4)
+const camera3d = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
+camera3d.position.set(m(planCenter.xIn), 18, m(planCenter.zIn) + 4)
 
-const controls = new OrbitControls(camera, renderer.domElement)
+const camera2d = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100)
+camera2d.position.set(m(planCenter.xIn), 20, m(planCenter.zIn))
+camera2d.up.set(0, 0, -1)
+camera2d.lookAt(m(planCenter.xIn), 0, m(planCenter.zIn))
+let activeCamera: THREE.Camera = camera2d
+
+const controls = new OrbitControls(camera3d, renderer.domElement)
 controls.enableDamping = true
 controls.target.set(m(planCenter.xIn), 0, m(planCenter.zIn))
 controls.minPolarAngle = 0.01
 controls.maxPolarAngle = Math.PI - 0.01
 controls.minDistance = 3
 controls.maxDistance = 22
+controls.enabled = false
 setNavigationMode('rotate')
 
 scene.add(new THREE.HemisphereLight('#ffffff', '#9ca3af', 1.6))
@@ -303,8 +315,8 @@ buildFlat()
 renderPanel()
 resize()
 renderer.setAnimationLoop(() => {
-  controls.update()
-  renderer.render(scene, camera)
+  if (controls.enabled) controls.update()
+  renderer.render(scene, activeCamera)
 })
 window.addEventListener('resize', resize)
 
@@ -312,6 +324,8 @@ function buildFlat() {
   const flat = new THREE.Group()
   flat.name = 'Flatty draft model'
   scene.add(flat)
+
+  flat.add(createBaseFloor())
 
   for (const room of rooms) {
     flat.add(createFloor(room))
@@ -322,11 +336,43 @@ function buildFlat() {
     flat.add(createWall(wall))
   }
 
-  flat.add(createKitchenBuiltIns())
-  flat.add(createWoodSlatFeature())
-  flat.add(createCeilingGuide())
   flat.add(createNorthLightWindowStrip())
   flat.add(createMeasurementOverlay())
+}
+
+function createBaseFloor() {
+  const outline: Array<[number, number]> = [
+    [240.2, 0],
+    [525.6, 0],
+    [525.6, 253.9],
+    [426.2, 253.9],
+    [426.2, 362.2],
+    [240.2, 362.2],
+    [230.2, 446.85],
+    [88.6, 446.85],
+    [88.6, 371.25],
+    [106, 371.25],
+    [106, 237],
+    [0, 237],
+    [0, livingFacadeZIn],
+    [240.2, livingFacadeZIn],
+  ]
+  const shape = new THREE.Shape()
+  outline.forEach(([xIn, zIn], index) => {
+    const action = index === 0 ? shape.moveTo.bind(shape) : shape.lineTo.bind(shape)
+    action(m(xIn), m(zIn))
+  })
+  shape.closePath()
+
+  const geometry = new THREE.ShapeGeometry(shape)
+  geometry.rotateX(Math.PI / 2)
+  const material = materialFor('wall')
+  material.side = THREE.DoubleSide
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'continuous base floor'
+  mesh.position.y = -0.045
+  mesh.receiveShadow = true
+  return mesh
 }
 
 function createFloor(room: Room) {
@@ -353,68 +399,6 @@ function createWall(wall: Wall) {
   mesh.rotation.y = -Math.atan2(dz, dx)
   mesh.castShadow = true
   mesh.receiveShadow = true
-  return mesh
-}
-
-function createKitchenBuiltIns() {
-  const group = new THREE.Group()
-  group.name = 'Kitchen built-ins'
-
-  group.add(cabinet('base cabinets', 250, 275, 110, 24, 35, 'darkKitchen'))
-  group.add(cabinet('light wood countertop', 250, 275, 110, 24, 38, 'countertop', 2))
-  group.add(cabinet('tall dark cabinet', 245, 310, 18, 40, 84, 'darkKitchen'))
-
-  return group
-}
-
-function cabinet(
-  name: string,
-  xIn: number,
-  zIn: number,
-  widthIn: number,
-  depthIn: number,
-  heightIn: number,
-  finish: keyof typeof finishes,
-  capHeightIn = heightIn,
-) {
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(m(widthIn), m(capHeightIn), m(depthIn)),
-    materialFor(finish),
-  )
-  mesh.name = name
-  mesh.position.set(m(xIn + widthIn / 2), m(heightIn - capHeightIn / 2), m(zIn + depthIn / 2))
-  mesh.castShadow = true
-  mesh.receiveShadow = true
-  return mesh
-}
-
-function createWoodSlatFeature() {
-  const group = new THREE.Group()
-  group.name = 'Entry wood slat feature wall'
-  const slatCount = 18
-  for (let i = 0; i < slatCount; i += 1) {
-    const slat = new THREE.Mesh(
-      new THREE.BoxGeometry(m(1.2), m(94), m(1.6)),
-      materialFor('woodSlats'),
-    )
-    slat.position.set(m(94 + i * 2.2), m(47), m(369.4))
-    slat.castShadow = true
-    group.add(slat)
-  }
-  return group
-}
-
-function createCeilingGuide() {
-  const geometry = new THREE.BoxGeometry(m(525.6), 0.02, m(446.85))
-  const material = new THREE.MeshBasicMaterial({
-    color: '#ffffff',
-    transparent: true,
-    opacity: 0.14,
-    side: THREE.DoubleSide,
-  })
-  const mesh = new THREE.Mesh(geometry, material)
-  mesh.name = 'transparent ceiling height guide'
-  mesh.position.set(m(planCenter.xIn), m(wallHeightIn), m(planCenter.zIn))
   return mesh
 }
 
@@ -587,10 +571,16 @@ function roundRect(context: CanvasRenderingContext2D, x: number, y: number, w: n
 function renderPanel() {
   panel.innerHTML = `
     <h1>Flatty draft model</h1>
-    <p>This is a first-pass 3D reconstruction of the 5-room flat using the HDB PDF for topology, your laser measurements for usable interior space, and photos for wall/floor finishes.</p>
+    <p>Start with the orthographic 2D plan to verify room alignment and measurements, then switch to the 3D model.</p>
     <span class="badge">Draft: dimensions may have small measurement error</span>
 
-    <h2>Navigation mode</h2>
+    <h2>View</h2>
+    <div class="view-modes">
+      <button class="view-mode is-active" data-view="2d" type="button">2D plan</button>
+      <button class="view-mode" data-view="3d" type="button">3D model</button>
+    </div>
+
+    <h2>3D navigation mode</h2>
     <div class="navigation-modes">
       <button class="navigation-mode is-active" data-mode="rotate" type="button">Rotate</button>
       <button class="navigation-mode" data-mode="translate" type="button">Translate</button>
@@ -629,7 +619,16 @@ function renderPanel() {
     </ul>
   `
 
+  const viewButtons = panel.querySelectorAll<HTMLButtonElement>('.view-mode')
   const navigationButtons = panel.querySelectorAll<HTMLButtonElement>('.navigation-mode')
+  viewButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const view = button.dataset.view as '2d' | '3d'
+      setViewMode(view)
+      viewButtons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button))
+    })
+  })
+
   navigationButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const mode = button.dataset.mode as NavigationMode
@@ -645,6 +644,17 @@ function renderPanel() {
     overlay.visible = !overlay.visible
     toggle.textContent = overlay.visible ? 'Hide dimensions' : 'Show dimensions'
   })
+
+  setViewMode('2d')
+}
+
+function setViewMode(view: '2d' | '3d') {
+  const is3d = view === '3d'
+  activeCamera = is3d ? camera3d : camera2d
+  controls.enabled = is3d
+  panel.querySelectorAll<HTMLButtonElement>('.navigation-mode').forEach((button) => {
+    button.disabled = !is3d
+  })
 }
 
 function setNavigationMode(mode: NavigationMode) {
@@ -658,8 +668,20 @@ function resize() {
   const width = canvas.clientWidth
   const height = canvas.clientHeight
   renderer.setSize(width, height, false)
-  camera.aspect = width / height
-  camera.updateProjectionMatrix()
+
+  const aspect = width / height
+  camera3d.aspect = aspect
+  camera3d.updateProjectionMatrix()
+
+  const planWidth = m(525.6) + 1
+  const planDepth = m(446.85) + 1
+  const halfHeight = Math.max(planDepth / 2, planWidth / (2 * aspect))
+  const halfWidth = halfHeight * aspect
+  camera2d.left = -halfWidth
+  camera2d.right = halfWidth
+  camera2d.top = halfHeight
+  camera2d.bottom = -halfHeight
+  camera2d.updateProjectionMatrix()
 }
 
 function m(inches: number) {

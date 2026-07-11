@@ -1,6 +1,6 @@
 # Flatty
 
-A small, data-driven 3D model of the flat for trying room finishes and future furniture layouts.
+A small, data-driven 2D/3D model of the flat for validating measurements and trying future furniture layouts.
 
 ## Current scope
 
@@ -10,7 +10,7 @@ The first draft uses:
 - measured usable dimensions from the annotated measurement image,
 - room photos for approximate wall and floor finishes.
 
-Measurements are treated as approximate because they were taken manually with a laser device and may include small error. Existing loose furniture is intentionally omitted; the first priority is floor, wall, room volume, and built-in finish accuracy.
+Measurements are treated as approximate because they were taken manually with a laser device and may include small error. Existing furniture and built-ins are intentionally omitted; the first priority is floor continuity, wall alignment, room dimensions, and room volume.
 
 ## Run locally
 
@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-Then open the URL printed by Vite.
+Then open the URL printed by Vite. The app starts in the orthographic **2D plan** view; use the side-panel switch to open the **3D model**.
 
 ## Build
 
