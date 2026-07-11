@@ -6,10 +6,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const INCH_TO_METER = 0.0254
 const wallHeightIn = 101.7
 const wallThicknessIn = 4.5
+const doorOpenAngleDegrees = 45
 const bedroomDatumZIn = 124.9
 const livingDepthIn = 105
 const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
+const householdShelterDepthIn = 50.6
+const householdShelterBackZIn = bedroom3BackZIn + householdShelterDepthIn
+const entranceDoorOffsetFromShelterIn = 50
+const entranceDoorWidthIn = 40
+const entranceDoorStartZIn = householdShelterBackZIn + entranceDoorOffsetFromShelterIn
+const entranceDoorEndZIn = entranceDoorStartZIn + entranceDoorWidthIn
 const mainBedroomBackZIn = 173
 const bathroomFrontZIn = 179.1
 const bathroomDepthIn = 74.8
@@ -24,9 +31,12 @@ const mainBedroomDoorStartZIn = mainBedroomBackZIn - mainBedroomDoorWidthIn
 const bedroom2DoorStartXIn = 327.6
 const bedroom2DoorEndXIn = 360.3
 const bathroom2LeftXIn = bedroom2DoorStartXIn
+const bathroom2DoorHingeXIn = bathroom2LeftXIn + wallThicknessIn / 2
 const bathroom2DoorEndXIn = bedroom2DoorEndXIn
 const bathroom2WidthIn = 95
 const bathroomDividerXIn = bathroom2LeftXIn + bathroom2WidthIn
+const bathroom1DoorStartXIn = 450
+const bathroom1DoorEndXIn = 480
 const bathroom1RightXIn = 515.8
 const bathroom1WidthIn = bathroom1RightXIn - bathroomDividerXIn
 const viewStyle = {
@@ -64,6 +74,26 @@ type Wall = {
   finish?: keyof typeof finishes
   heightIn?: number
   thicknessIn?: number
+}
+
+type Door = {
+  name: string
+  hinge: [number, number]
+  closedDirection: [number, number]
+  widthIn: number
+  heightIn: number
+  leafThicknessIn: number
+  wallThicknessIn?: number
+  lintelStartExtensionIn?: number
+  swingDegrees: number
+  finish: keyof typeof finishes
+}
+
+type DoorModel = {
+  door: Door
+  pivot: THREE.Group
+  isOpen: boolean
+  currentSwingDegrees: number
 }
 
 type NavigationMode = 'rotate' | 'translate'
@@ -125,6 +155,18 @@ const finishes = {
     color: '#6b3f25',
     texture: 'plain',
   },
+  entranceDoor: {
+    name: 'dark wood entrance door',
+    color: '#533b2f',
+    modelColor: '#533b2f',
+    texture: 'wood',
+  },
+  interiorDoor: {
+    name: 'warm wood interior door',
+    color: '#76533d',
+    modelColor: '#76533d',
+    texture: 'wood',
+  },
 } satisfies Record<string, Finish>
 
 const rooms: Room[] = [
@@ -182,7 +224,7 @@ const rooms: Room[] = [
     xIn: 0,
     zIn: bedroom3BackZIn,
     widthIn: 106,
-    depthIn: 50.6,
+    depthIn: householdShelterDepthIn,
     floor: 'shelterFloor',
   },
   {
@@ -237,13 +279,14 @@ const walls: Wall[] = [
   { from: [88.6, 371.25], to: [88.6, 446.85] },
   { from: [88.6, 371.25], to: [106, 371.25] },
   { from: [230.2, 362.2], to: [230.2, 446.85] },
-  { from: [0, livingFacadeZIn], to: [0, 237] },
+  { from: [0, livingFacadeZIn], to: [0, householdShelterBackZIn] },
   { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
-  { from: [106, bedroom3BackZIn], to: [106, 237] },
-  { from: [0, 237], to: [106, 237] },
-  { from: [106, 237], to: [106, 371.25] },
+  { from: [106, bedroom3BackZIn], to: [106, householdShelterBackZIn] },
+  { from: [0, householdShelterBackZIn], to: [106, householdShelterBackZIn] },
+  { from: [106, householdShelterBackZIn], to: [106, entranceDoorStartZIn] },
+  { from: [106, entranceDoorEndZIn], to: [106, 371.25] },
 
-  // Partitions. Door gaps are intentionally approximate and left open.
+  // Partitions. Door openings are intentionally approximate.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
   { from: [387.8, 0], to: [387.8, mainBedroomDoorStartZIn] },
@@ -251,11 +294,11 @@ const walls: Wall[] = [
   { from: [bedroom2DoorEndXIn, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
   {
     from: [bathroom2DoorEndXIn, bedroomBathroomWallZIn],
-    to: [450, bedroomBathroomWallZIn],
+    to: [bathroom1DoorStartXIn, bedroomBathroomWallZIn],
     thicknessIn: bedroomBathroomWallThicknessIn,
   },
   {
-    from: [480, bedroomBathroomWallZIn],
+    from: [bathroom1DoorEndXIn, bedroomBathroomWallZIn],
     to: [mainBedroomRightXIn, bedroomBathroomWallZIn],
     thicknessIn: bedroomBathroomWallThicknessIn,
   },
@@ -268,6 +311,62 @@ const walls: Wall[] = [
 
   // Photo-observed accent finish in the main bedroom.
   { from: [387.8, 0], to: [mainBedroomRightXIn, 0], finish: 'accentTaupe' },
+]
+
+const doors: Door[] = [
+  {
+    name: 'Flat entrance door',
+    hinge: [106, entranceDoorStartZIn],
+    closedDirection: [0, 1],
+    widthIn: entranceDoorWidthIn,
+    heightIn: 82,
+    leafThicknessIn: 1.75,
+    swingDegrees: -doorOpenAngleDegrees,
+    finish: 'entranceDoor',
+  },
+  {
+    name: 'Bedroom 2 door',
+    hinge: [bedroom2DoorEndXIn, bedroomDatumZIn],
+    closedDirection: [-1, 0],
+    widthIn: bedroom2DoorEndXIn - bedroom2DoorStartXIn,
+    heightIn: 82,
+    leafThicknessIn: 1.5,
+    swingDegrees: doorOpenAngleDegrees,
+    finish: 'interiorDoor',
+  },
+  {
+    name: 'Main bedroom door',
+    hinge: [387.8, mainBedroomBackZIn],
+    closedDirection: [0, -1],
+    widthIn: mainBedroomDoorWidthIn,
+    heightIn: 82,
+    leafThicknessIn: 1.5,
+    swingDegrees: doorOpenAngleDegrees,
+    finish: 'interiorDoor',
+  },
+  {
+    name: 'Bath / WC 2 door',
+    hinge: [bathroom2DoorHingeXIn, bedroomBathroomWallZIn],
+    closedDirection: [1, 0],
+    widthIn: bathroom2DoorEndXIn - bathroom2DoorHingeXIn,
+    heightIn: 82,
+    leafThicknessIn: 1.5,
+    wallThicknessIn: bedroomBathroomWallThicknessIn,
+    lintelStartExtensionIn: wallThicknessIn,
+    swingDegrees: doorOpenAngleDegrees,
+    finish: 'interiorDoor',
+  },
+  {
+    name: 'Bath / WC 1 door',
+    hinge: [bathroom1DoorEndXIn, bedroomBathroomWallZIn],
+    closedDirection: [-1, 0],
+    widthIn: bathroom1DoorEndXIn - bathroom1DoorStartXIn,
+    heightIn: 82,
+    leafThicknessIn: 1.5,
+    wallThicknessIn: bedroomBathroomWallThicknessIn,
+    swingDegrees: -doorOpenAngleDegrees,
+    finish: 'interiorDoor',
+  },
 ]
 
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
@@ -300,9 +399,14 @@ let activeCamera: THREE.Camera = camera2d
 
 const roomFloors: THREE.Mesh[] = []
 const roomDimensionOverlays = new Map<Room, THREE.Group>()
+const doorModels: DoorModel[] = []
+const doorHitAreas: THREE.Mesh[] = []
+const doorPlanGraphics: THREE.Object3D[] = []
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
+const clock = new THREE.Clock()
 let hoveredRoom: Room | undefined
+let doorPointerDown: [number, number] | undefined
 
 const controls = new OrbitControls(camera3d, renderer.domElement)
 controls.enableDamping = true
@@ -327,6 +431,7 @@ bindViewControls()
 resize()
 renderer.setAnimationLoop(() => {
   if (controls.enabled) controls.update()
+  updateDoorAnimations(clock.getDelta())
   renderer.render(scene, activeCamera)
 })
 window.addEventListener('resize', resize)
@@ -354,6 +459,10 @@ function buildFlat() {
     flat.add(createWall(wall, walls))
   }
 
+  for (const door of doors) {
+    flat.add(createDoor(door))
+  }
+
   flat.add(createNorthLightWindowStrip())
   addModelEdges(flat)
 }
@@ -365,7 +474,7 @@ function addModelEdges(model: THREE.Group) {
     opacity: 0.72,
   })
   model.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return
+    if (!(object instanceof THREE.Mesh) || object.userData.skipEdges) return
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(object.geometry), material)
     edges.name = `${object.name} edges`
     object.add(edges)
@@ -384,8 +493,8 @@ function createBaseFloor() {
     [88.6, 446.85],
     [88.6, 371.25],
     [106, 371.25],
-    [106, 237],
-    [0, 237],
+    [106, householdShelterBackZIn],
+    [0, householdShelterBackZIn],
     [0, livingFacadeZIn],
     [240.2, livingFacadeZIn],
   ]
@@ -460,6 +569,111 @@ function createWall(wall: Wall, allWalls: Wall[]) {
   mesh.castShadow = true
   mesh.receiveShadow = true
   return mesh
+}
+
+function createDoor(door: Door) {
+  const group = new THREE.Group()
+  group.name = door.name
+
+  const closedAngle = Math.atan2(door.closedDirection[1], door.closedDirection[0])
+  const openAngle = closedAngle + THREE.MathUtils.degToRad(door.swingDegrees)
+  const pivot = new THREE.Group()
+  pivot.name = `${door.name} hinge`
+  pivot.position.set(m(door.hinge[0]), 0, m(door.hinge[1]))
+  group.add(pivot)
+
+  const leaf = new THREE.Mesh(
+    new THREE.BoxGeometry(m(door.widthIn), m(door.heightIn), m(door.leafThicknessIn)),
+    materialFor(door.finish),
+  )
+  leaf.name = `${door.name} leaf`
+  leaf.position.set(m(door.widthIn / 2), m(door.heightIn / 2), 0)
+  leaf.castShadow = true
+  leaf.receiveShadow = true
+  pivot.add(leaf)
+
+  const planLine = createDimensionLine([
+    new THREE.Vector3(0, 0.06, 0),
+    new THREE.Vector3(m(door.widthIn), 0.06, 0),
+  ], viewStyle.edges)
+  planLine.name = `${door.name} plan line`
+  pivot.add(planLine)
+  doorPlanGraphics.push(planLine)
+
+  const hitArea = new THREE.Mesh(
+    new THREE.BoxGeometry(m(door.widthIn), m(door.heightIn), m(8)),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+  )
+  hitArea.name = `${door.name} click target`
+  hitArea.position.copy(leaf.position)
+  hitArea.userData.skipEdges = true
+  pivot.add(hitArea)
+
+  const model: DoorModel = {
+    door,
+    pivot,
+    isOpen: true,
+    currentSwingDegrees: door.swingDegrees,
+  }
+  hitArea.userData.doorModel = model
+  doorModels.push(model)
+  doorHitAreas.push(hitArea)
+  setDoorModelAngle(model)
+
+  const lintelHeightIn = wallHeightIn - door.heightIn
+  const lintelStartExtensionIn = door.lintelStartExtensionIn ?? 0
+  const lintelLengthIn = door.widthIn + lintelStartExtensionIn
+  const lintelCenterOffsetIn = (door.widthIn - lintelStartExtensionIn) / 2
+  const lintel = new THREE.Mesh(
+    new THREE.BoxGeometry(m(lintelLengthIn), m(lintelHeightIn), m(door.wallThicknessIn ?? wallThicknessIn)),
+    materialFor('wall'),
+  )
+  lintel.name = `${door.name} lintel`
+  lintel.position.set(
+    m(door.hinge[0] + door.closedDirection[0] * lintelCenterOffsetIn),
+    m(door.heightIn + lintelHeightIn / 2),
+    m(door.hinge[1] + door.closedDirection[1] * lintelCenterOffsetIn),
+  )
+  lintel.rotation.y = -closedAngle
+  lintel.castShadow = true
+  lintel.receiveShadow = true
+  group.add(lintel)
+
+  const arcPoints = Array.from({ length: 25 }, (_, index) => {
+    const angle = closedAngle + (openAngle - closedAngle) * index / 24
+    return new THREE.Vector3(
+      m(door.hinge[0] + Math.cos(angle) * door.widthIn),
+      0.06,
+      m(door.hinge[1] + Math.sin(angle) * door.widthIn),
+    )
+  })
+  const swingArc = createDimensionLine(arcPoints, viewStyle.edges)
+  swingArc.name = `${door.name} swing`
+  group.add(swingArc)
+  doorPlanGraphics.push(swingArc)
+
+  return group
+}
+
+function updateDoorAnimations(deltaSeconds: number) {
+  for (const model of doorModels) {
+    const targetSwingDegrees = model.isOpen ? model.door.swingDegrees : 0
+    model.currentSwingDegrees = THREE.MathUtils.damp(
+      model.currentSwingDegrees,
+      targetSwingDegrees,
+      12,
+      Math.min(deltaSeconds, 0.1),
+    )
+    if (Math.abs(model.currentSwingDegrees - targetSwingDegrees) < 0.05) {
+      model.currentSwingDegrees = targetSwingDegrees
+    }
+    setDoorModelAngle(model)
+  }
+}
+
+function setDoorModelAngle(model: DoorModel) {
+  const closedAngle = Math.atan2(model.door.closedDirection[1], model.door.closedDirection[0])
+  model.pivot.rotation.y = -closedAngle - THREE.MathUtils.degToRad(model.currentSwingDegrees)
 }
 
 function orthogonalJoinExtension(
@@ -688,19 +902,50 @@ function bindViewControls() {
     })
   })
   canvas.addEventListener('pointermove', showHoveredRoomDimensions)
-  canvas.addEventListener('pointerleave', () => setHoveredRoom(undefined))
+  canvas.addEventListener('pointerdown', rememberDoorPointerDown)
+  canvas.addEventListener('pointerup', toggleClickedDoor)
+  canvas.addEventListener('pointercancel', () => { doorPointerDown = undefined })
+  canvas.addEventListener('pointerleave', () => {
+    doorPointerDown = undefined
+    canvas.style.cursor = ''
+    setHoveredRoom(undefined)
+  })
   setViewMode('2d')
 }
 
 function showHoveredRoomDimensions(event: PointerEvent) {
+  const doorModel = doorModelAtPointer(event)
+  canvas.style.cursor = doorModel ? 'pointer' : ''
+  if (doorModel) {
+    setHoveredRoom(undefined)
+    return
+  }
+
+  const room = raycaster.intersectObjects(roomFloors)[0]?.object.userData.room as Room | undefined
+  setHoveredRoom(room)
+}
+
+function rememberDoorPointerDown(event: PointerEvent) {
+  if (event.button === 0) doorPointerDown = [event.clientX, event.clientY]
+}
+
+function toggleClickedDoor(event: PointerEvent) {
+  const start = doorPointerDown
+  doorPointerDown = undefined
+  if (!start || Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5) return
+
+  const model = doorModelAtPointer(event)
+  if (model) model.isOpen = !model.isOpen
+}
+
+function doorModelAtPointer(event: PointerEvent) {
   const bounds = canvas.getBoundingClientRect()
   pointer.set(
     ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
     -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
   )
   raycaster.setFromCamera(pointer, activeCamera)
-  const room = raycaster.intersectObjects(roomFloors)[0]?.object.userData.room as Room | undefined
-  setHoveredRoom(room)
+  return raycaster.intersectObjects(doorHitAreas)[0]?.object.userData.doorModel as DoorModel | undefined
 }
 
 function setHoveredRoom(room: Room | undefined) {
@@ -714,6 +959,7 @@ function setViewMode(view: '2d' | '3d') {
   const is3d = view === '3d'
   activeCamera = is3d ? camera3d : camera2d
   controls.enabled = is3d
+  doorPlanGraphics.forEach((graphic) => { graphic.visible = !is3d })
   setHoveredRoom(undefined)
   viewButtons.forEach((button) => {
     const isActive = button.dataset.view === view
