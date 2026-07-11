@@ -348,7 +348,7 @@ function buildFlat() {
   }
 
   for (const wall of walls) {
-    flat.add(createWall(wall))
+    flat.add(createWall(wall, walls))
   }
 
   flat.add(createNorthLightWindowStrip())
@@ -401,22 +401,62 @@ function createFloor(room: Room) {
   return mesh
 }
 
-function createWall(wall: Wall) {
+function createWall(wall: Wall, allWalls: Wall[]) {
   const [x1, z1] = wall.from
   const [x2, z2] = wall.to
   const dx = x2 - x1
   const dz = z2 - z1
   const length = Math.hypot(dx, dz)
+  const direction: [number, number] = [dx / length, dz / length]
+  const startExtension = orthogonalJoinExtension(wall.from, direction, wall, allWalls)
+  const endExtension = orthogonalJoinExtension(wall.to, direction, wall, allWalls)
+  const extendedFrom = [
+    x1 - direction[0] * startExtension,
+    z1 - direction[1] * startExtension,
+  ] as const
+  const extendedTo = [
+    x2 + direction[0] * endExtension,
+    z2 + direction[1] * endExtension,
+  ] as const
   const height = wall.heightIn ?? wallHeightIn
   const thickness = wall.thicknessIn ?? wallThicknessIn
-  const geometry = new THREE.BoxGeometry(m(length), m(height), m(thickness))
+  const geometry = new THREE.BoxGeometry(m(length + startExtension + endExtension), m(height), m(thickness))
   const mesh = new THREE.Mesh(geometry, materialFor(wall.finish ?? 'wall'))
   mesh.name = 'wall'
-  mesh.position.set(m((x1 + x2) / 2), m(height / 2), m((z1 + z2) / 2))
+  mesh.position.set(
+    m((extendedFrom[0] + extendedTo[0]) / 2),
+    m(height / 2),
+    m((extendedFrom[1] + extendedTo[1]) / 2),
+  )
   mesh.rotation.y = -Math.atan2(dz, dx)
   mesh.castShadow = true
   mesh.receiveShadow = true
   return mesh
+}
+
+function orthogonalJoinExtension(
+  endpoint: [number, number],
+  direction: [number, number],
+  wall: Wall,
+  allWalls: Wall[],
+) {
+  let extension = 0
+
+  for (const other of allWalls) {
+    if (other === wall || (!samePoint(endpoint, other.from) && !samePoint(endpoint, other.to))) continue
+
+    const otherDx = other.to[0] - other.from[0]
+    const otherDz = other.to[1] - other.from[1]
+    const otherLength = Math.hypot(otherDx, otherDz)
+    const dot = Math.abs((direction[0] * otherDx + direction[1] * otherDz) / otherLength)
+    if (dot < 0.001) extension = Math.max(extension, (other.thicknessIn ?? wallThicknessIn) / 2)
+  }
+
+  return extension
+}
+
+function samePoint(a: [number, number], b: [number, number]) {
+  return Math.abs(a[0] - b[0]) < 0.01 && Math.abs(a[1] - b[1]) < 0.01
 }
 
 function createNorthLightWindowStrip() {
