@@ -1,0 +1,19 @@
+{
+  "name": "flatty",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "latest"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.1",
+    "typescript": "latest",
+    "vite": "latest"
+  }
+}
