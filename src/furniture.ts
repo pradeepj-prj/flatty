@@ -219,10 +219,14 @@ function buildBeadTable(group: THREE.Group, item: FurnitureDefinition, m: Inches
   const legHeightIn = item.heightIn - topThicknessIn
   const legXIn = item.widthIn / 2 - 8
   const legZIn = item.depthIn / 2 - 6
+
+  // One sculptural ball-stack leg at the front centre.
+  buildBeadLeg(group, 0, legZIn, legHeightIn, legColor, m)
+
+  // Two plain round legs at the back corners.
+  const backLegRadiusIn = 1.9
   for (const xIn of [-legXIn, legXIn]) {
-    for (const zIn of [-legZIn, legZIn]) {
-      buildBeadLeg(group, xIn, zIn, legHeightIn, legColor, m)
-    }
+    addCylinder(group, backLegRadiusIn, legHeightIn, xIn, legHeightIn / 2, -legZIn, legColor, m)
   }
 }
 
