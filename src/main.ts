@@ -243,13 +243,13 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 const planCenter = { xIn: 262.8, zIn: 223.4 }
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
-camera.up.set(0, 0, -1)
-camera.position.set(m(planCenter.xIn), 18, m(planCenter.zIn + 0.1))
+camera.position.set(m(planCenter.xIn), 18, m(planCenter.zIn) + 4)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.target.set(m(planCenter.xIn), 0, m(planCenter.zIn))
-controls.maxPolarAngle = Math.PI * 0.48
+controls.minPolarAngle = 0.01
+controls.maxPolarAngle = Math.PI - 0.01
 controls.minDistance = 3
 controls.maxDistance = 22
 
