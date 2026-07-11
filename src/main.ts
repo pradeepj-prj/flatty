@@ -10,10 +10,29 @@ const bedroomDatumZIn = 124.9
 const livingDepthIn = 105
 const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
+const mainBedroomBackZIn = 173
+const bathroomFrontZIn = 179.1
+const bathroomDepthIn = 74.8
+const bathroomBackZIn = bathroomFrontZIn + bathroomDepthIn
+const bedroomBathroomWallThicknessIn = bathroomFrontZIn - mainBedroomBackZIn
+const bedroomBathroomWallZIn = mainBedroomBackZIn + bedroomBathroomWallThicknessIn / 2
+const mainBedroomRightXIn = 525.1
+const mainBedroomLowerWidthIn = 115.5
+const mainBedroomLowerWallStartXIn = mainBedroomRightXIn - mainBedroomLowerWidthIn
+const mainBedroomDoorWidthIn = 35.5
+const mainBedroomDoorStartZIn = mainBedroomBackZIn - mainBedroomDoorWidthIn
+const bedroom2DoorStartXIn = 327.6
+const bedroom2DoorEndXIn = 360.3
+const bathroom2LeftXIn = bedroom2DoorStartXIn
+const bathroom2DoorEndXIn = bedroom2DoorEndXIn
+const bathroom2WidthIn = 95
+const bathroomDividerXIn = bathroom2LeftXIn + bathroom2WidthIn
+const bathroom1RightXIn = 515.8
+const bathroom1WidthIn = bathroom1RightXIn - bathroomDividerXIn
 const viewStyle = {
-  background: '#e5e7eb',
-  floor: '#fafaf8',
-  wall: '#b8bec6',
+  background: '#94a3b8',
+  floor: '#a9784f',
+  wall: '#ffffff',
   windows: '#d8dde2',
 } satisfies Record<string, Color>
 
@@ -22,6 +41,7 @@ type Color = `#${string}`
 type Finish = {
   name: string
   color: Color
+  modelColor?: Color
   texture?: 'wood' | 'plain'
   plankColor?: Color
 }
@@ -73,6 +93,12 @@ const finishes = {
   bathFloor: {
     name: 'light neutral bathroom floor',
     color: '#d6d1c8',
+    texture: 'plain',
+  },
+  shelterFloor: {
+    name: 'cool grey household shelter floor',
+    color: '#cbd5e1',
+    modelColor: '#cbd5e1',
     texture: 'plain',
   },
   wall: {
@@ -146,7 +172,7 @@ const rooms: Room[] = [
     xIn: 387.8,
     zIn: 0,
     widthIn: 137.3,
-    depthIn: 173,
+    depthIn: mainBedroomBackZIn,
     floor: 'bedroomFloor',
   },
   {
@@ -155,22 +181,22 @@ const rooms: Room[] = [
     zIn: bedroom3BackZIn,
     widthIn: 106,
     depthIn: 50.6,
-    floor: 'bathFloor',
+    floor: 'shelterFloor',
   },
   {
     name: 'Bath / WC 2',
-    xIn: 344.5,
-    zIn: 179.1,
-    widthIn: 80.7,
-    depthIn: 74.8,
+    xIn: bathroom2LeftXIn,
+    zIn: bathroomFrontZIn,
+    widthIn: bathroom2WidthIn,
+    depthIn: bathroomDepthIn,
     floor: 'bathFloor',
   },
   {
     name: 'Bath / WC 1',
-    xIn: 425.2,
-    zIn: 179.1,
-    widthIn: 90.6,
-    depthIn: 74.8,
+    xIn: bathroomDividerXIn,
+    zIn: bathroomFrontZIn,
+    widthIn: bathroom1WidthIn,
+    depthIn: bathroomDepthIn,
     floor: 'bathFloor',
   },
   {
@@ -204,30 +230,42 @@ const walls: Wall[] = [
   { from: [240.2, 0], to: [525.6, 0] },
   { from: [0, livingFacadeZIn], to: [240.2, livingFacadeZIn] },
   { from: [525.6, 0], to: [525.6, 253.9] },
-  { from: [426.2, 362.2], to: [240.2, 362.2] },
+  { from: [426.2, 362.2], to: [230.2, 362.2] },
   { from: [230.2, 446.85], to: [88.6, 446.85], finish: 'accentRust' },
   { from: [88.6, 371.25], to: [88.6, 446.85] },
-  { from: [230.2, 371.25], to: [230.2, 446.85] },
+  { from: [88.6, 371.25], to: [106, 371.25] },
+  { from: [230.2, 362.2], to: [230.2, 446.85] },
   { from: [0, livingFacadeZIn], to: [0, 237] },
   { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
+  { from: [106, bedroom3BackZIn], to: [106, 237] },
   { from: [0, 237], to: [106, 237] },
+  { from: [106, 237], to: [106, 371.25] },
 
   // Partitions. Door gaps are intentionally approximate and left open.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
-  { from: [387.8, 0], to: [387.8, 173] },
-  { from: [240.2, bedroomDatumZIn], to: [327.6, bedroomDatumZIn] },
-  { from: [360.3, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
-  { from: [387.8, 173], to: [450, 173] },
-  { from: [480, 173], to: [525.1, 173] },
-  { from: [344.5, 179.1], to: [344.5, 253.9] },
-  { from: [425.2, 179.1], to: [425.2, 253.9] },
-  { from: [344.5, 253.9], to: [515.8, 253.9] },
+  { from: [387.8, 0], to: [387.8, mainBedroomDoorStartZIn] },
+  { from: [240.2, bedroomDatumZIn], to: [bedroom2DoorStartXIn, bedroomDatumZIn] },
+  { from: [bedroom2DoorEndXIn, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
+  {
+    from: [bathroom2DoorEndXIn, bedroomBathroomWallZIn],
+    to: [450, bedroomBathroomWallZIn],
+    thicknessIn: bedroomBathroomWallThicknessIn,
+  },
+  {
+    from: [480, bedroomBathroomWallZIn],
+    to: [mainBedroomRightXIn, bedroomBathroomWallZIn],
+    thicknessIn: bedroomBathroomWallThicknessIn,
+  },
+  { from: [bathroom2LeftXIn, bedroomBathroomWallZIn], to: [bathroom2LeftXIn, bathroomBackZIn] },
+  { from: [bathroomDividerXIn, bedroomBathroomWallZIn], to: [bathroomDividerXIn, bathroomBackZIn] },
+  { from: [bathroom2LeftXIn, bathroomBackZIn], to: [525.6, bathroomBackZIn] },
+  { from: [426.2, 253.9], to: [426.2, 362.2] },
 
   // The kitchen and service yard are one open space with no partition wall.
 
   // Photo-observed accent finish in the main bedroom.
-  { from: [387.8, 0], to: [525.1, 0], finish: 'accentTaupe' },
+  { from: [387.8, 0], to: [mainBedroomRightXIn, 0], finish: 'accentTaupe' },
 ]
 
 const measurements = [
@@ -237,7 +275,12 @@ const measurements = [
   ['Bedroom 2 width', 122, 'blue measured usable width'],
   ['Bedroom 2 depth', 124.9, 'blue measured usable depth'],
   ['Main bedroom width', 137.3, 'blue measured usable width'],
-  ['Main bedroom depth', 173, 'blue measured usable depth'],
+  ['Main bedroom depth', mainBedroomBackZIn, 'blue measured usable depth'],
+  ['Main bedroom lower width', mainBedroomLowerWidthIn, 'blue measured usable width'],
+  ['Main bedroom doorway', mainBedroomDoorWidthIn, 'blue measured opening'],
+  ['Bath / WC 2 width', bathroom2WidthIn, 'blue approximate modeled width'],
+  ['Bath / WC 1 width', bathroom1WidthIn, 'blue approximate modeled width'],
+  ['Bathroom depth', bathroomDepthIn, 'blue measured usable depth'],
   ['Study width', 141.6, 'blue measured usable width'],
   ['Study depth', 75.6, 'blue measured usable depth'],
   ['Kitchen / service span', 194.4, 'blue measured span across kitchen/service side'],
@@ -252,7 +295,30 @@ const dimensionOverlays: DimensionOverlay[] = [
   { label: 'Bedroom 2 width', valueIn: 122, from: [265.8, 2, 18], to: [387.8, 2, 18] },
   { label: 'Bedroom 2 depth', valueIn: bedroomDatumZIn, from: [277, 2, 0], to: [277, 2, bedroomDatumZIn] },
   { label: 'Main bedroom width', valueIn: 137.3, from: [387.8, 2, 18], to: [525.1, 2, 18] },
-  { label: 'Main bedroom depth', valueIn: 173, from: [400, 2, 0], to: [400, 2, 173] },
+  {
+    label: 'Main bedroom depth',
+    valueIn: mainBedroomBackZIn,
+    from: [400, 2, 0],
+    to: [400, 2, mainBedroomBackZIn],
+  },
+  {
+    label: 'Bath / WC 2 width',
+    valueIn: bathroom2WidthIn,
+    from: [bathroom2LeftXIn, 2, 240],
+    to: [bathroomDividerXIn, 2, 240],
+  },
+  {
+    label: 'Bath / WC 1 width',
+    valueIn: bathroom1WidthIn,
+    from: [bathroomDividerXIn, 2, 240],
+    to: [bathroom1RightXIn, 2, 240],
+  },
+  {
+    label: 'Bathroom depth',
+    valueIn: bathroomDepthIn,
+    from: [355, 2, bathroomFrontZIn],
+    to: [355, 2, bathroomBackZIn],
+  },
   { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
   { label: 'Kitchen depth', valueIn: 98.6, from: [255, 2, 263.6], to: [255, 2, 362.2] },
   { label: 'Study width', valueIn: 141.6, from: [88.6, 2, 390], to: [230.2, 2, 390] },
@@ -335,7 +401,7 @@ function buildFlat() {
   }
 
   for (const wall of walls) {
-    flat.add(createWall(wall))
+    flat.add(createWall(wall, walls))
   }
 
   flat.add(createNorthLightWindowStrip())
@@ -349,7 +415,7 @@ function createBaseFloor() {
     [525.6, 253.9],
     [426.2, 253.9],
     [426.2, 362.2],
-    [240.2, 362.2],
+    [230.2, 362.2],
     [230.2, 446.85],
     [88.6, 446.85],
     [88.6, 371.25],
@@ -386,22 +452,70 @@ function createFloor(room: Room) {
   return mesh
 }
 
-function createWall(wall: Wall) {
+function createWall(wall: Wall, allWalls: Wall[]) {
   const [x1, z1] = wall.from
   const [x2, z2] = wall.to
   const dx = x2 - x1
   const dz = z2 - z1
   const length = Math.hypot(dx, dz)
+  const direction: [number, number] = [dx / length, dz / length]
+  const startExtension = orthogonalJoinExtension(wall.from, direction, wall, allWalls)
+  const endExtension = orthogonalJoinExtension(wall.to, direction, wall, allWalls)
+  const extendedFrom = [
+    x1 - direction[0] * startExtension,
+    z1 - direction[1] * startExtension,
+  ] as const
+  const extendedTo = [
+    x2 + direction[0] * endExtension,
+    z2 + direction[1] * endExtension,
+  ] as const
   const height = wall.heightIn ?? wallHeightIn
   const thickness = wall.thicknessIn ?? wallThicknessIn
-  const geometry = new THREE.BoxGeometry(m(length), m(height), m(thickness))
+  const geometry = new THREE.BoxGeometry(m(length + startExtension + endExtension), m(height), m(thickness))
   const mesh = new THREE.Mesh(geometry, materialFor(wall.finish ?? 'wall'))
   mesh.name = 'wall'
-  mesh.position.set(m((x1 + x2) / 2), m(height / 2), m((z1 + z2) / 2))
+  mesh.position.set(
+    m((extendedFrom[0] + extendedTo[0]) / 2),
+    m(height / 2),
+    m((extendedFrom[1] + extendedTo[1]) / 2),
+  )
   mesh.rotation.y = -Math.atan2(dz, dx)
   mesh.castShadow = true
   mesh.receiveShadow = true
   return mesh
+}
+
+function orthogonalJoinExtension(
+  endpoint: [number, number],
+  direction: [number, number],
+  wall: Wall,
+  allWalls: Wall[],
+) {
+  let extension = 0
+
+  for (const other of allWalls) {
+    if (other === wall || !pointOnWall(endpoint, other)) continue
+
+    const otherDx = other.to[0] - other.from[0]
+    const otherDz = other.to[1] - other.from[1]
+    const otherLength = Math.hypot(otherDx, otherDz)
+    const dot = Math.abs((direction[0] * otherDx + direction[1] * otherDz) / otherLength)
+    if (dot < 0.001) extension = Math.max(extension, (other.thicknessIn ?? wallThicknessIn) / 2)
+  }
+
+  return extension
+}
+
+function pointOnWall(point: [number, number], wall: Wall) {
+  const dx = wall.to[0] - wall.from[0]
+  const dz = wall.to[1] - wall.from[1]
+  const lengthSquared = dx * dx + dz * dz
+  const pointDx = point[0] - wall.from[0]
+  const pointDz = point[1] - wall.from[1]
+  const cross = Math.abs(pointDx * dz - pointDz * dx)
+  const projection = pointDx * dx + pointDz * dz
+
+  return cross < 0.01 * Math.sqrt(lengthSquared) && projection >= -0.01 && projection <= lengthSquared + 0.01
 }
 
 function createNorthLightWindowStrip() {
@@ -553,9 +667,16 @@ function validateRoomInterference(roomData: Room[]) {
 }
 
 function materialFor(key: keyof typeof finishes) {
-  const floorFinishes: Array<keyof typeof finishes> = ['livingFloor', 'bedroomFloor', 'kitchenFloor', 'bathFloor']
+  const finish: Finish = finishes[key]
+  const floorFinishes: Array<keyof typeof finishes> = [
+    'livingFloor',
+    'bedroomFloor',
+    'kitchenFloor',
+    'bathFloor',
+    'shelterFloor',
+  ]
   return new THREE.MeshStandardMaterial({
-    color: floorFinishes.includes(key) ? viewStyle.floor : viewStyle.wall,
+    color: finish.modelColor ?? (floorFinishes.includes(key) ? viewStyle.floor : viewStyle.wall),
     roughness: 0.86,
     metalness: 0,
   })
@@ -616,8 +737,8 @@ function renderPanel() {
 
     <h2>Display style</h2>
     <ul>
-      <li>Floors use a near-white finish and walls use a contrasting neutral grey.</li>
-      <li>Only measurement annotations retain color: blue for the floor plane and red for ceiling height.</li>
+      <li>Floors use an oak-brown finish, with a cool-grey floor distinguishing the household shelter.</li>
+      <li>Walls use a white finish; measurements use blue for the floor plane and red for ceiling height.</li>
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
   `
