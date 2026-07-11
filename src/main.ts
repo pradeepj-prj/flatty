@@ -222,7 +222,12 @@ const walls: Wall[] = [
   { from: [480, 173], to: [525.1, 173] },
   { from: [344.5, 179.1], to: [344.5, 253.9] },
   { from: [425.2, 179.1], to: [425.2, 253.9] },
-  { from: [344.5, 253.9], to: [515.8, 253.9] },
+  { from: [344.5, 253.9], to: [525.6, 253.9] },
+  { from: [426.2, 253.9], to: [426.2, 362.2] },
+
+  // Partition between study and entry/circulation.
+  { from: [106, 371.25], to: [145, 371.25] },
+  { from: [175, 371.25], to: [230.2, 371.25] },
 
   // The kitchen and service yard are one open space with no partition wall.
 
@@ -350,6 +355,8 @@ function createBaseFloor() {
     [426.2, 253.9],
     [426.2, 362.2],
     [240.2, 362.2],
+    [240.2, 371.25],
+    [230.2, 371.25],
     [230.2, 446.85],
     [88.6, 446.85],
     [88.6, 371.25],
