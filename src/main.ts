@@ -10,6 +10,16 @@ const bedroomDatumZIn = 124.9
 const livingDepthIn = 105
 const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
+const mainBedroomBackZIn = 173
+const bathroomFrontZIn = 179.1
+const bedroomBathroomWallThicknessIn = bathroomFrontZIn - mainBedroomBackZIn
+const bedroomBathroomWallZIn = mainBedroomBackZIn + bedroomBathroomWallThicknessIn / 2
+const mainBedroomRightXIn = 525.1
+const mainBedroomLowerWidthIn = 115.5
+const mainBedroomLowerWallStartXIn = mainBedroomRightXIn - mainBedroomLowerWidthIn
+const mainBedroomDoorWidthIn = 35.5
+const mainBedroomDoorStartZIn = mainBedroomBackZIn - mainBedroomDoorWidthIn
+const bathroomDividerXIn = 425.2
 const viewStyle = {
   background: '#e5e7eb',
   floor: '#a9784f',
@@ -153,7 +163,7 @@ const rooms: Room[] = [
     xIn: 387.8,
     zIn: 0,
     widthIn: 137.3,
-    depthIn: 173,
+    depthIn: mainBedroomBackZIn,
     floor: 'bedroomFloor',
   },
   {
@@ -167,15 +177,15 @@ const rooms: Room[] = [
   {
     name: 'Bath / WC 2',
     xIn: 344.5,
-    zIn: 179.1,
+    zIn: bathroomFrontZIn,
     widthIn: 80.7,
     depthIn: 74.8,
     floor: 'bathFloor',
   },
   {
     name: 'Bath / WC 1',
-    xIn: 425.2,
-    zIn: 179.1,
+    xIn: bathroomDividerXIn,
+    zIn: bathroomFrontZIn,
     widthIn: 90.6,
     depthIn: 74.8,
     floor: 'bathFloor',
@@ -227,20 +237,28 @@ const walls: Wall[] = [
   // Partitions. Door gaps are intentionally approximate and left open.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
-  { from: [387.8, 0], to: [387.8, 173] },
+  { from: [387.8, 0], to: [387.8, mainBedroomDoorStartZIn] },
   { from: [240.2, bedroomDatumZIn], to: [327.6, bedroomDatumZIn] },
   { from: [360.3, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
-  { from: [387.8, 173], to: [450, 173] },
-  { from: [480, 173], to: [525.1, 173] },
-  { from: [344.5, 179.1], to: [344.5, 253.9] },
-  { from: [425.2, 179.1], to: [425.2, 253.9] },
+  {
+    from: [mainBedroomLowerWallStartXIn, bedroomBathroomWallZIn],
+    to: [450, bedroomBathroomWallZIn],
+    thicknessIn: bedroomBathroomWallThicknessIn,
+  },
+  {
+    from: [480, bedroomBathroomWallZIn],
+    to: [mainBedroomRightXIn, bedroomBathroomWallZIn],
+    thicknessIn: bedroomBathroomWallThicknessIn,
+  },
+  { from: [344.5, bathroomFrontZIn], to: [344.5, 253.9] },
+  { from: [bathroomDividerXIn, bedroomBathroomWallZIn], to: [bathroomDividerXIn, 253.9] },
   { from: [344.5, 253.9], to: [525.6, 253.9] },
   { from: [426.2, 253.9], to: [426.2, 362.2] },
 
   // The kitchen and service yard are one open space with no partition wall.
 
   // Photo-observed accent finish in the main bedroom.
-  { from: [387.8, 0], to: [525.1, 0], finish: 'accentTaupe' },
+  { from: [387.8, 0], to: [mainBedroomRightXIn, 0], finish: 'accentTaupe' },
 ]
 
 const measurements = [
@@ -250,7 +268,9 @@ const measurements = [
   ['Bedroom 2 width', 122, 'blue measured usable width'],
   ['Bedroom 2 depth', 124.9, 'blue measured usable depth'],
   ['Main bedroom width', 137.3, 'blue measured usable width'],
-  ['Main bedroom depth', 173, 'blue measured usable depth'],
+  ['Main bedroom depth', mainBedroomBackZIn, 'blue measured usable depth'],
+  ['Main bedroom lower width', mainBedroomLowerWidthIn, 'blue measured usable width'],
+  ['Main bedroom doorway', mainBedroomDoorWidthIn, 'blue measured opening'],
   ['Study width', 141.6, 'blue measured usable width'],
   ['Study depth', 75.6, 'blue measured usable depth'],
   ['Kitchen / service span', 194.4, 'blue measured span across kitchen/service side'],
@@ -265,7 +285,12 @@ const dimensionOverlays: DimensionOverlay[] = [
   { label: 'Bedroom 2 width', valueIn: 122, from: [265.8, 2, 18], to: [387.8, 2, 18] },
   { label: 'Bedroom 2 depth', valueIn: bedroomDatumZIn, from: [277, 2, 0], to: [277, 2, bedroomDatumZIn] },
   { label: 'Main bedroom width', valueIn: 137.3, from: [387.8, 2, 18], to: [525.1, 2, 18] },
-  { label: 'Main bedroom depth', valueIn: 173, from: [400, 2, 0], to: [400, 2, 173] },
+  {
+    label: 'Main bedroom depth',
+    valueIn: mainBedroomBackZIn,
+    from: [400, 2, 0],
+    to: [400, 2, mainBedroomBackZIn],
+  },
   { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
   { label: 'Kitchen depth', valueIn: 98.6, from: [255, 2, 263.6], to: [255, 2, 362.2] },
   { label: 'Study width', valueIn: 141.6, from: [88.6, 2, 390], to: [230.2, 2, 390] },
@@ -443,7 +468,7 @@ function orthogonalJoinExtension(
   let extension = 0
 
   for (const other of allWalls) {
-    if (other === wall || (!samePoint(endpoint, other.from) && !samePoint(endpoint, other.to))) continue
+    if (other === wall || !pointOnWall(endpoint, other)) continue
 
     const otherDx = other.to[0] - other.from[0]
     const otherDz = other.to[1] - other.from[1]
@@ -455,8 +480,16 @@ function orthogonalJoinExtension(
   return extension
 }
 
-function samePoint(a: [number, number], b: [number, number]) {
-  return Math.abs(a[0] - b[0]) < 0.01 && Math.abs(a[1] - b[1]) < 0.01
+function pointOnWall(point: [number, number], wall: Wall) {
+  const dx = wall.to[0] - wall.from[0]
+  const dz = wall.to[1] - wall.from[1]
+  const lengthSquared = dx * dx + dz * dz
+  const pointDx = point[0] - wall.from[0]
+  const pointDz = point[1] - wall.from[1]
+  const cross = Math.abs(pointDx * dz - pointDz * dx)
+  const projection = pointDx * dx + pointDz * dz
+
+  return cross < 0.01 * Math.sqrt(lengthSquared) && projection >= -0.01 && projection <= lengthSquared + 0.01
 }
 
 function createNorthLightWindowStrip() {
