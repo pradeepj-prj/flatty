@@ -12,6 +12,8 @@ const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
 const mainBedroomBackZIn = 173
 const bathroomFrontZIn = 179.1
+const bathroomDepthIn = 74.8
+const bathroomBackZIn = bathroomFrontZIn + bathroomDepthIn
 const bedroomBathroomWallThicknessIn = bathroomFrontZIn - mainBedroomBackZIn
 const bedroomBathroomWallZIn = mainBedroomBackZIn + bedroomBathroomWallThicknessIn / 2
 const mainBedroomRightXIn = 525.1
@@ -19,7 +21,13 @@ const mainBedroomLowerWidthIn = 115.5
 const mainBedroomLowerWallStartXIn = mainBedroomRightXIn - mainBedroomLowerWidthIn
 const mainBedroomDoorWidthIn = 35.5
 const mainBedroomDoorStartZIn = mainBedroomBackZIn - mainBedroomDoorWidthIn
-const bathroomDividerXIn = 425.2
+const bathroom2LeftXIn = 344.5
+const bathroom2WidthIn = 86.6
+const bathroomDividerXIn = bathroom2LeftXIn + bathroom2WidthIn
+const bathroom1WidthIn = 84.7
+const bathroom1RightXIn = bathroomDividerXIn + bathroom1WidthIn
+const bathroom2DoorWidthIn = 30
+const bathroom2DoorEndXIn = bathroom2LeftXIn + bathroom2DoorWidthIn
 const viewStyle = {
   background: '#e5e7eb',
   floor: '#a9784f',
@@ -176,18 +184,18 @@ const rooms: Room[] = [
   },
   {
     name: 'Bath / WC 2',
-    xIn: 344.5,
+    xIn: bathroom2LeftXIn,
     zIn: bathroomFrontZIn,
-    widthIn: 80.7,
-    depthIn: 74.8,
+    widthIn: bathroom2WidthIn,
+    depthIn: bathroomDepthIn,
     floor: 'bathFloor',
   },
   {
     name: 'Bath / WC 1',
     xIn: bathroomDividerXIn,
     zIn: bathroomFrontZIn,
-    widthIn: 90.6,
-    depthIn: 74.8,
+    widthIn: bathroom1WidthIn,
+    depthIn: bathroomDepthIn,
     floor: 'bathFloor',
   },
   {
@@ -241,7 +249,7 @@ const walls: Wall[] = [
   { from: [240.2, bedroomDatumZIn], to: [327.6, bedroomDatumZIn] },
   { from: [360.3, bedroomDatumZIn], to: [387.8, bedroomDatumZIn] },
   {
-    from: [mainBedroomLowerWallStartXIn, bedroomBathroomWallZIn],
+    from: [bathroom2DoorEndXIn, bedroomBathroomWallZIn],
     to: [450, bedroomBathroomWallZIn],
     thicknessIn: bedroomBathroomWallThicknessIn,
   },
@@ -250,9 +258,9 @@ const walls: Wall[] = [
     to: [mainBedroomRightXIn, bedroomBathroomWallZIn],
     thicknessIn: bedroomBathroomWallThicknessIn,
   },
-  { from: [344.5, bathroomFrontZIn], to: [344.5, 253.9] },
-  { from: [bathroomDividerXIn, bedroomBathroomWallZIn], to: [bathroomDividerXIn, 253.9] },
-  { from: [344.5, 253.9], to: [525.6, 253.9] },
+  { from: [bathroom2LeftXIn, bedroomBathroomWallZIn], to: [bathroom2LeftXIn, bathroomBackZIn] },
+  { from: [bathroomDividerXIn, bedroomBathroomWallZIn], to: [bathroomDividerXIn, bathroomBackZIn] },
+  { from: [bathroom2LeftXIn, bathroomBackZIn], to: [525.6, bathroomBackZIn] },
   { from: [426.2, 253.9], to: [426.2, 362.2] },
 
   // The kitchen and service yard are one open space with no partition wall.
@@ -271,6 +279,9 @@ const measurements = [
   ['Main bedroom depth', mainBedroomBackZIn, 'blue measured usable depth'],
   ['Main bedroom lower width', mainBedroomLowerWidthIn, 'blue measured usable width'],
   ['Main bedroom doorway', mainBedroomDoorWidthIn, 'blue measured opening'],
+  ['Bath / WC 2 width', bathroom2WidthIn, 'blue approximate modeled width'],
+  ['Bath / WC 1 width', bathroom1WidthIn, 'blue approximate modeled width'],
+  ['Bathroom depth', bathroomDepthIn, 'blue measured usable depth'],
   ['Study width', 141.6, 'blue measured usable width'],
   ['Study depth', 75.6, 'blue measured usable depth'],
   ['Kitchen / service span', 194.4, 'blue measured span across kitchen/service side'],
@@ -290,6 +301,24 @@ const dimensionOverlays: DimensionOverlay[] = [
     valueIn: mainBedroomBackZIn,
     from: [400, 2, 0],
     to: [400, 2, mainBedroomBackZIn],
+  },
+  {
+    label: 'Bath / WC 2 width',
+    valueIn: bathroom2WidthIn,
+    from: [bathroom2LeftXIn, 2, 240],
+    to: [bathroomDividerXIn, 2, 240],
+  },
+  {
+    label: 'Bath / WC 1 width',
+    valueIn: bathroom1WidthIn,
+    from: [bathroomDividerXIn, 2, 240],
+    to: [bathroom1RightXIn, 2, 240],
+  },
+  {
+    label: 'Bathroom depth',
+    valueIn: bathroomDepthIn,
+    from: [355, 2, bathroomFrontZIn],
+    to: [355, 2, bathroomBackZIn],
   },
   { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
   { label: 'Kitchen depth', valueIn: 98.6, from: [255, 2, 263.6], to: [255, 2, 362.2] },
