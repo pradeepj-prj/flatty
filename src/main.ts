@@ -12,7 +12,7 @@ type Color = `#${string}`
 type Finish = {
   name: string
   color: Color
-  texture?: 'wood' | 'tile' | 'plain'
+  texture?: 'wood' | 'plain'
   plankColor?: Color
 }
 
@@ -36,27 +36,24 @@ type Wall = {
 
 const finishes = {
   livingFloor: {
-    name: 'dark grey-brown wood-look planks',
-    color: '#403a35',
-    plankColor: '#5a5149',
-    texture: 'wood',
+    name: 'dark grey-brown floor',
+    color: '#4a4540',
+    texture: 'plain',
   },
   bedroomFloor: {
-    name: 'light grey-beige wood-look planks',
-    color: '#b8afa3',
-    plankColor: '#d6cec3',
-    texture: 'wood',
+    name: 'light grey-beige floor',
+    color: '#c6beb3',
+    texture: 'plain',
   },
   kitchenFloor: {
-    name: 'warmer medium-brown wood-look planks',
-    color: '#8a6143',
-    plankColor: '#b1835f',
-    texture: 'wood',
+    name: 'medium warm-brown floor',
+    color: '#8a684f',
+    texture: 'plain',
   },
   bathFloor: {
-    name: 'light neutral tile',
+    name: 'light neutral bathroom floor',
     color: '#d6d1c8',
-    texture: 'tile',
+    texture: 'plain',
   },
   wall: {
     name: 'warm off-white / light cream walls',
@@ -98,19 +95,27 @@ const rooms: Room[] = [
     widthIn: 106,
     depthIn: 166.5,
     floor: 'bedroomFloor',
-    notes: 'Measured usable space; PDF structural dimension differs due to wall widths.',
+    notes: 'Measured usable space; the partition to Living / Dining was removed.',
   },
   {
     name: 'Living / Dining',
     xIn: 106,
     zIn: 0,
-    widthIn: 125.5,
+    widthIn: 134.2,
     depthIn: 166.5,
     floor: 'livingFloor',
   },
   {
+    name: 'Entry / Circulation',
+    xIn: 106,
+    zIn: 166.5,
+    widthIn: 134.2,
+    depthIn: 204.75,
+    floor: 'livingFloor',
+  },
+  {
     name: 'Bedroom 2',
-    xIn: 231.5,
+    xIn: 240.2,
     zIn: 0,
     widthIn: 122,
     depthIn: 124.9,
@@ -118,7 +123,7 @@ const rooms: Room[] = [
   },
   {
     name: 'Main Bedroom',
-    xIn: 353.5,
+    xIn: 387.8,
     zIn: 0,
     widthIn: 137.3,
     depthIn: 173,
@@ -133,74 +138,74 @@ const rooms: Room[] = [
     floor: 'bathFloor',
   },
   {
-    name: 'Suggested Study',
-    xIn: 106,
-    zIn: 166.5,
-    widthIn: 141.6,
-    depthIn: 75.6,
-    floor: 'livingFloor',
-  },
-  {
-    name: 'Kitchen',
-    xIn: 247.6,
-    zIn: 166.5,
-    widthIn: 194.4,
-    depthIn: 98.6,
-    floor: 'kitchenFloor',
-  },
-  {
     name: 'Bath / WC 2',
-    xIn: 353.5,
-    zIn: 173,
-    widthIn: 60,
-    depthIn: 70,
+    xIn: 344.5,
+    zIn: 179.1,
+    widthIn: 80.7,
+    depthIn: 74.8,
     floor: 'bathFloor',
   },
   {
     name: 'Bath / WC 1',
-    xIn: 413.5,
-    zIn: 173,
-    widthIn: 77.3,
-    depthIn: 70,
+    xIn: 425.2,
+    zIn: 179.1,
+    widthIn: 90.6,
+    depthIn: 74.8,
     floor: 'bathFloor',
   },
   {
+    name: 'Kitchen',
+    xIn: 240.2,
+    zIn: 263.6,
+    widthIn: 130.9,
+    depthIn: 98.6,
+    floor: 'kitchenFloor',
+  },
+  {
     name: 'Service Yard',
-    xIn: 413.5,
-    zIn: 243,
-    widthIn: 77.3,
-    depthIn: 22,
+    xIn: 371.1,
+    zIn: 263.6,
+    widthIn: 55.1,
+    depthIn: 98.6,
     floor: 'bathFloor',
+  },
+  {
+    name: 'Suggested Study',
+    xIn: 88.6,
+    zIn: 371.25,
+    widthIn: 141.6,
+    depthIn: 75.6,
+    floor: 'livingFloor',
   },
 ]
 
 const walls: Wall[] = [
   // Main facade and exterior shell, simplified from the HDB plan.
-  { from: [0, 0], to: [490.8, 0] },
-  { from: [490.8, 0], to: [490.8, 243] },
-  { from: [442, 265.1], to: [247.6, 265.1] },
-  { from: [247.6, 242.1], to: [106, 242.1] },
+  { from: [0, 0], to: [525.6, 0] },
+  { from: [525.6, 0], to: [525.6, 253.9] },
+  { from: [426.2, 362.2], to: [240.2, 362.2] },
+  { from: [230.2, 446.85], to: [88.6, 446.85], finish: 'accentRust' },
+  { from: [88.6, 371.25], to: [88.6, 446.85] },
+  { from: [230.2, 371.25], to: [230.2, 446.85] },
   { from: [0, 0], to: [0, 217.1] },
   { from: [0, 166.5], to: [106, 166.5] },
   { from: [0, 217.1], to: [106, 217.1] },
 
   // Partitions. Door gaps are intentionally approximate and left open.
   // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
-  { from: [231.5, 0], to: [231.5, 124.9] },
-  { from: [353.5, 0], to: [353.5, 124.9] },
-  { from: [231.5, 124.9], to: [310, 124.9] },
-  { from: [335, 124.9], to: [353.5, 124.9] },
-  { from: [353.5, 173], to: [490.8, 173] },
-  { from: [353.5, 173], to: [353.5, 243] },
-  { from: [413.5, 173], to: [413.5, 243] },
-  { from: [353.5, 243], to: [490.8, 243] },
-  { from: [247.6, 166.5], to: [247.6, 242.1] },
-  { from: [106, 166.5], to: [106, 242.1], finish: 'accentRust' },
+  { from: [240.2, 0], to: [240.2, 124.9], finish: 'accentRust' },
+  { from: [387.8, 0], to: [387.8, 135] },
+  { from: [240.2, 124.9], to: [327.6, 124.9] },
+  { from: [360.3, 124.9], to: [362.2, 124.9] },
+  { from: [387.8, 173], to: [450, 173] },
+  { from: [480, 173], to: [525.1, 173] },
+  { from: [344.5, 179.1], to: [344.5, 253.9] },
+  { from: [425.2, 179.1], to: [425.2, 253.9] },
+  { from: [344.5, 253.9], to: [515.8, 253.9] },
+  { from: [371.1, 263.6], to: [371.1, 362.2] },
 
-  // Accent/photo-observed finishes.
-  { from: [106, 166.5], to: [247.6, 166.5], finish: 'accentRust' },
-  { from: [231.5, 124.9], to: [353.5, 124.9], finish: 'accentRust' },
-  { from: [0, 0], to: [106, 0], finish: 'accentTaupe' },
+  // Photo-observed accent finish in the main bedroom.
+  { from: [387.8, 0], to: [525.1, 0], finish: 'accentTaupe' },
 ]
 
 const measurements = [
@@ -236,12 +241,14 @@ renderer.outputColorSpace = THREE.SRGBColorSpace
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
+const planCenter = { xIn: 262.8, zIn: 223.4 }
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
-camera.position.set(m(260), m(260), m(470))
+camera.up.set(0, 0, -1)
+camera.position.set(m(planCenter.xIn), 18, m(planCenter.zIn + 0.1))
 
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
-controls.target.set(m(245), 0, m(130))
+controls.target.set(m(planCenter.xIn), 0, m(planCenter.zIn))
 controls.maxPolarAngle = Math.PI * 0.48
 controls.minDistance = 3
 controls.maxDistance = 22
@@ -253,6 +260,7 @@ sun.castShadow = true
 sun.shadow.mapSize.set(2048, 2048)
 scene.add(sun)
 
+validateRoomInterference(rooms)
 buildFlat()
 renderPanel()
 resize()
@@ -313,10 +321,9 @@ function createKitchenBuiltIns() {
   const group = new THREE.Group()
   group.name = 'Kitchen built-ins'
 
-  group.add(cabinet('base cabinets + counter', 275, 175, 150, 24, 35, 'darkKitchen'))
-  group.add(cabinet('light wood countertop', 275, 175, 150, 24, 38, 'countertop', 2))
-  group.add(cabinet('tall dark cabinet', 255, 178, 16, 80, 84, 'darkKitchen'))
-  group.add(cabinet('island / movable prep surface placeholder', 258, 205, 48, 28, 36, 'countertop'))
+  group.add(cabinet('base cabinets', 250, 275, 110, 24, 35, 'darkKitchen'))
+  group.add(cabinet('light wood countertop', 250, 275, 110, 24, 38, 'countertop', 2))
+  group.add(cabinet('tall dark cabinet', 245, 310, 18, 40, 84, 'darkKitchen'))
 
   return group
 }
@@ -336,7 +343,7 @@ function cabinet(
     materialFor(finish),
   )
   mesh.name = name
-  mesh.position.set(m(xIn + widthIn / 2), m(heightIn / 2), m(zIn + depthIn / 2))
+  mesh.position.set(m(xIn + widthIn / 2), m(heightIn - capHeightIn / 2), m(zIn + depthIn / 2))
   mesh.castShadow = true
   mesh.receiveShadow = true
   return mesh
@@ -351,7 +358,7 @@ function createWoodSlatFeature() {
       new THREE.BoxGeometry(m(1.2), m(94), m(1.6)),
       materialFor('woodSlats'),
     )
-    slat.position.set(m(111 + i * 2.2), m(47), m(166.5 - 1.8))
+    slat.position.set(m(94 + i * 2.2), m(47), m(369.4))
     slat.castShadow = true
     group.add(slat)
   }
@@ -359,7 +366,7 @@ function createWoodSlatFeature() {
 }
 
 function createCeilingGuide() {
-  const geometry = new THREE.BoxGeometry(m(490.8), 0.02, m(265.1))
+  const geometry = new THREE.BoxGeometry(m(525.6), 0.02, m(446.85))
   const material = new THREE.MeshBasicMaterial({
     color: '#ffffff',
     transparent: true,
@@ -368,7 +375,7 @@ function createCeilingGuide() {
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.name = 'transparent ceiling height guide'
-  mesh.position.set(m(245.4), m(wallHeightIn), m(132.55))
+  mesh.position.set(m(planCenter.xIn), m(wallHeightIn), m(planCenter.zIn))
   return mesh
 }
 
@@ -414,9 +421,34 @@ function createRoomLabel(room: Room) {
   return sprite
 }
 
+function validateRoomInterference(roomData: Room[]) {
+  const conflicts: string[] = []
+
+  for (let i = 0; i < roomData.length; i += 1) {
+    const room = roomData[i]
+    if (room.widthIn <= 0 || room.depthIn <= 0) {
+      conflicts.push(`${room.name} has invalid dimensions`)
+    }
+
+    for (let j = i + 1; j < roomData.length; j += 1) {
+      const other = roomData[j]
+      const overlapX = Math.min(room.xIn + room.widthIn, other.xIn + other.widthIn) - Math.max(room.xIn, other.xIn)
+      const overlapZ = Math.min(room.zIn + room.depthIn, other.zIn + other.depthIn) - Math.max(room.zIn, other.zIn)
+
+      if (overlapX > 0.01 && overlapZ > 0.01) {
+        conflicts.push(`${room.name} overlaps ${other.name} by ${overlapX.toFixed(1)} × ${overlapZ.toFixed(1)} in`)
+      }
+    }
+  }
+
+  if (conflicts.length > 0) {
+    throw new Error(`Room interference detected:\n${conflicts.join('\n')}`)
+  }
+}
+
 function materialFor(key: keyof typeof finishes) {
   const finish = finishes[key]
-  const texture = finish.texture === 'wood' || finish.texture === 'tile' ? createTexture(finish) : undefined
+  const texture = finish.texture === 'wood' ? createTexture(finish) : undefined
   const material = new THREE.MeshStandardMaterial({
     color: texture ? '#ffffff' : finish.color,
     map: texture,
@@ -453,23 +485,6 @@ function createTexture(finish: Finish) {
       ctx.beginPath()
       ctx.moveTo(x, 0)
       ctx.lineTo(x + 34, canvas.height)
-      ctx.stroke()
-    }
-  }
-
-  if (finish.texture === 'tile') {
-    ctx.strokeStyle = 'rgba(70, 70, 70, 0.26)'
-    ctx.lineWidth = 3
-    for (let y = 0; y <= canvas.height; y += 128) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
-    for (let x = 0; x <= canvas.width; x += 128) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
       ctx.stroke()
     }
   }
