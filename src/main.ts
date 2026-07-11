@@ -30,7 +30,7 @@ const bathroomDividerXIn = bathroom2LeftXIn + bathroom2WidthIn
 const bathroom1RightXIn = 515.8
 const bathroom1WidthIn = bathroom1RightXIn - bathroomDividerXIn
 const viewStyle = {
-  background: '#e5e7eb',
+  background: '#94a3b8',
   floor: '#a9784f',
   wall: '#ffffff',
   windows: '#d8dde2',
