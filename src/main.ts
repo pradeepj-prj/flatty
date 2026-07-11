@@ -6,6 +6,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const INCH_TO_METER = 0.0254
 const wallHeightIn = 101.7
 const wallThicknessIn = 4.5
+const viewStyle = {
+  background: '#dfe4ea',
+  model: '#f7f7f4',
+  windows: '#d8dde2',
+} satisfies Record<string, Color>
 
 type Color = `#${string}`
 
@@ -33,6 +38,8 @@ type Wall = {
   heightIn?: number
   thicknessIn?: number
 }
+
+type NavigationMode = 'rotate' | 'translate'
 
 type DimensionOverlay = {
   label: string
@@ -263,7 +270,7 @@ const canvas = canvasElement
 const panel = panelElement
 
 const scene = new THREE.Scene()
-scene.background = new THREE.Color('#dbe3ef')
+scene.background = new THREE.Color(viewStyle.background)
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -282,6 +289,7 @@ controls.minPolarAngle = 0.01
 controls.maxPolarAngle = Math.PI - 0.01
 controls.minDistance = 3
 controls.maxDistance = 22
+setNavigationMode('rotate')
 
 scene.add(new THREE.HemisphereLight('#ffffff', '#9ca3af', 1.6))
 const sun = new THREE.DirectionalLight('#ffffff', 2.2)
@@ -413,7 +421,7 @@ function createCeilingGuide() {
 function createNorthLightWindowStrip() {
   const group = new THREE.Group()
   group.name = 'approximate window bands'
-  const windowMaterial = new THREE.MeshBasicMaterial({ color: '#93c5fd', transparent: true, opacity: 0.46 })
+  const windowMaterial = new THREE.MeshBasicMaterial({ color: viewStyle.windows, transparent: true, opacity: 0.55 })
   for (const [xIn, widthIn] of [
     [12, 82],
     [120, 90],
@@ -558,55 +566,12 @@ function validateRoomInterference(roomData: Room[]) {
   }
 }
 
-function materialFor(key: keyof typeof finishes) {
-  const finish = finishes[key]
-  const texture = finish.texture === 'wood' ? createTexture(finish) : undefined
-  const material = new THREE.MeshStandardMaterial({
-    color: texture ? '#ffffff' : finish.color,
-    map: texture,
-    roughness: 0.82,
-    metalness: 0.02,
+function materialFor(_key: keyof typeof finishes) {
+  return new THREE.MeshStandardMaterial({
+    color: viewStyle.model,
+    roughness: 0.86,
+    metalness: 0,
   })
-  return material
-}
-
-function createTexture(finish: Finish) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 512
-  canvas.height = 512
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Could not create material texture.')
-
-  ctx.fillStyle = finish.color
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-  if (finish.texture === 'wood') {
-    const plankColor = finish.plankColor ?? finish.color
-    for (let y = 0; y < canvas.height; y += 42) {
-      ctx.fillStyle = y % 84 === 0 ? plankColor : finish.color
-      ctx.fillRect(0, y, canvas.width, 38)
-      ctx.strokeStyle = 'rgba(20, 20, 20, 0.26)'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
-    for (let x = 0; x < canvas.width; x += 126) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x + 34, canvas.height)
-      ctx.stroke()
-    }
-  }
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.wrapS = THREE.RepeatWrapping
-  texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(2, 2)
-  texture.colorSpace = THREE.SRGBColorSpace
-  return texture
 }
 
 function roundRect(context: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -624,13 +589,19 @@ function renderPanel() {
     <h1>Flatty draft model</h1>
     <p>This is a first-pass 3D reconstruction of the 5-room flat using the HDB PDF for topology, your laser measurements for usable interior space, and photos for wall/floor finishes.</p>
     <span class="badge">Draft: dimensions may have small measurement error</span>
+
+    <h2>Navigation mode</h2>
+    <div class="navigation-modes">
+      <button class="navigation-mode is-active" data-mode="rotate" type="button">Rotate</button>
+      <button class="navigation-mode" data-mode="translate" type="button">Translate</button>
+    </div>
     <button class="overlay-toggle" type="button">Hide dimensions</button>
 
     <h2>How to view</h2>
     <ul>
-      <li>Drag to orbit.</li>
-      <li>Scroll to zoom.</li>
-      <li>Right-drag / two-finger drag to pan.</li>
+      <li>Choose Rotate or Translate, then drag with the primary mouse button.</li>
+      <li>Scroll or pinch to zoom.</li>
+      <li>The secondary mouse button performs the other navigation action.</li>
     </ul>
 
     <h2>Measurement overlay</h2>
@@ -650,15 +621,22 @@ function renderPanel() {
       </tbody>
     </table>
 
-    <h2>Material notes</h2>
+    <h2>Display style</h2>
     <ul>
-      <li>Main living/dining: ${finishes.livingFloor.name}.</li>
-      <li>Bedrooms: ${finishes.bedroomFloor.name}.</li>
-      <li>Kitchen: ${finishes.kitchenFloor.name}, with ${finishes.darkKitchen.name} and ${finishes.countertop.name}.</li>
-      <li>Walls: ${finishes.wall.name}, plus rust/taupe accent walls from photos.</li>
+      <li>All model surfaces use a neutral white clay finish so room edges and dimensions remain clear.</li>
+      <li>Only measurement annotations retain color: blue for the floor plane and red for ceiling height.</li>
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
   `
+
+  const navigationButtons = panel.querySelectorAll<HTMLButtonElement>('.navigation-mode')
+  navigationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.mode as NavigationMode
+      setNavigationMode(mode)
+      navigationButtons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button))
+    })
+  })
 
   const toggle = panel.querySelector<HTMLButtonElement>('.overlay-toggle')
   const overlay = scene.getObjectByName('measurement overlay')
@@ -667,6 +645,13 @@ function renderPanel() {
     overlay.visible = !overlay.visible
     toggle.textContent = overlay.visible ? 'Hide dimensions' : 'Show dimensions'
   })
+}
+
+function setNavigationMode(mode: NavigationMode) {
+  const translate = mode === 'translate'
+  controls.mouseButtons.LEFT = translate ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE
+  controls.mouseButtons.RIGHT = translate ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN
+  controls.touches.ONE = translate ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE
 }
 
 function resize() {

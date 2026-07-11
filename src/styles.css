@@ -83,22 +83,35 @@ body {
   font-size: 12px;
 }
 
+.navigation-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.navigation-mode,
 .overlay-toggle {
-  display: block;
-  width: 100%;
-  margin-top: 14px;
   padding: 9px 12px;
-  border: 1px solid rgba(96, 165, 250, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.55);
   border-radius: 7px;
-  background: rgba(30, 64, 175, 0.28);
+  background: rgba(51, 65, 85, 0.5);
   color: #dbeafe;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
 }
 
+.navigation-mode:hover,
+.navigation-mode.is-active,
 .overlay-toggle:hover {
+  border-color: rgba(96, 165, 250, 0.9);
   background: rgba(30, 64, 175, 0.46);
+}
+
+.overlay-toggle {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
 }
 
 @media (max-width: 900px) {
