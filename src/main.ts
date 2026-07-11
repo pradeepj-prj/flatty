@@ -34,6 +34,14 @@ type Wall = {
   thicknessIn?: number
 }
 
+type DimensionOverlay = {
+  label: string
+  valueIn: number
+  from: [number, number, number]
+  to: [number, number, number]
+  color?: Color
+}
+
 const finishes = {
   livingFloor: {
     name: 'dark grey-brown floor',
@@ -222,6 +230,28 @@ const measurements = [
   ['Kitchen depth', 98.6, 'blue measured usable depth'],
 ] as const
 
+const dimensionOverlays: DimensionOverlay[] = [
+  { label: 'Bedroom 3 width', valueIn: 106, from: [0, 2, 145], to: [106, 2, 145] },
+  { label: 'Bedroom 3 depth', valueIn: 166.5, from: [12, 2, 0], to: [12, 2, 166.5] },
+  { label: 'Open living span', valueIn: 231.5, from: [0, 2, 82], to: [231.5, 2, 82] },
+  { label: 'Living depth', valueIn: 105, from: [225, 2, 0], to: [225, 2, 105] },
+  { label: 'Bedroom 2 width', valueIn: 122, from: [240.2, 2, 18], to: [362.2, 2, 18] },
+  { label: 'Bedroom 2 depth', valueIn: 124.9, from: [252, 2, 0], to: [252, 2, 124.9] },
+  { label: 'Main bedroom width', valueIn: 137.3, from: [387.8, 2, 18], to: [525.1, 2, 18] },
+  { label: 'Main bedroom depth', valueIn: 173, from: [400, 2, 0], to: [400, 2, 173] },
+  { label: 'Kitchen + service span', valueIn: 194.4, from: [240.2, 2, 350], to: [434.6, 2, 350] },
+  { label: 'Kitchen depth', valueIn: 98.6, from: [255, 2, 263.6], to: [255, 2, 362.2] },
+  { label: 'Study width', valueIn: 141.6, from: [88.6, 2, 390], to: [230.2, 2, 390] },
+  { label: 'Study depth', valueIn: 75.6, from: [102, 2, 371.25], to: [102, 2, 446.85] },
+  {
+    label: 'Ceiling height',
+    valueIn: wallHeightIn,
+    from: [72, 0, 245],
+    to: [72, wallHeightIn, 245],
+    color: '#dc2626',
+  },
+]
+
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
 const panelElement = document.querySelector<HTMLElement>('#panel')
 
@@ -288,6 +318,7 @@ function buildFlat() {
   flat.add(createWoodSlatFeature())
   flat.add(createCeilingGuide())
   flat.add(createNorthLightWindowStrip())
+  flat.add(createMeasurementOverlay())
 }
 
 function createFloor(room: Room) {
@@ -394,6 +425,87 @@ function createNorthLightWindowStrip() {
     group.add(window)
   }
   return group
+}
+
+function createMeasurementOverlay() {
+  const overlay = new THREE.Group()
+  overlay.name = 'measurement overlay'
+
+  for (const dimension of dimensionOverlays) {
+    const color = dimension.color ?? '#1677d2'
+    const start = pointInMeters(dimension.from)
+    const end = pointInMeters(dimension.to)
+    const direction = end.clone().sub(start).normalize()
+    const tickDirection = Math.abs(direction.y) > 0.8
+      ? new THREE.Vector3(1, 0, 0)
+      : new THREE.Vector3(-direction.z, 0, direction.x).normalize()
+
+    overlay.add(createDimensionLine([start, end], color))
+    overlay.add(createDimensionLine([
+      start.clone().addScaledVector(tickDirection, m(-3)),
+      start.clone().addScaledVector(tickDirection, m(3)),
+    ], color))
+    overlay.add(createDimensionLine([
+      end.clone().addScaledVector(tickDirection, m(-3)),
+      end.clone().addScaledVector(tickDirection, m(3)),
+    ], color))
+
+    const labelPosition = start.clone().lerp(end, 0.5)
+    if (Math.abs(direction.y) > 0.8) {
+      labelPosition.x += m(23)
+    } else {
+      labelPosition.addScaledVector(tickDirection, m(7))
+      labelPosition.y += m(4)
+    }
+
+    overlay.add(createTextSprite(
+      `${dimension.valueIn}\" · ${m(dimension.valueIn).toFixed(2)} m`,
+      labelPosition,
+      color,
+    ))
+  }
+
+  return overlay
+}
+
+function createDimensionLine(points: THREE.Vector3[], color: Color) {
+  const geometry = new THREE.BufferGeometry().setFromPoints(points)
+  const material = new THREE.LineBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.95 })
+  const line = new THREE.Line(geometry, material)
+  line.renderOrder = 20
+  return line
+}
+
+function createTextSprite(text: string, position: THREE.Vector3, color: Color) {
+  const labelCanvas = document.createElement('canvas')
+  labelCanvas.width = 512
+  labelCanvas.height = 128
+  const context = labelCanvas.getContext('2d')
+  if (!context) throw new Error('Could not create dimension label canvas.')
+
+  context.fillStyle = 'rgba(255, 255, 255, 0.92)'
+  roundRect(context, 6, 12, 500, 104, 18)
+  context.fill()
+  context.strokeStyle = color
+  context.lineWidth = 8
+  context.stroke()
+  context.fillStyle = color
+  context.font = 'bold 39px system-ui, sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(text, 256, 64)
+
+  const texture = new THREE.CanvasTexture(labelCanvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false }))
+  sprite.position.copy(position)
+  sprite.scale.set(m(38), m(9.5), 1)
+  sprite.renderOrder = 21
+  return sprite
+}
+
+function pointInMeters([xIn, yIn, zIn]: [number, number, number]) {
+  return new THREE.Vector3(m(xIn), m(yIn), m(zIn))
 }
 
 function createRoomLabel(room: Room) {
@@ -512,12 +624,20 @@ function renderPanel() {
     <h1>Flatty draft model</h1>
     <p>This is a first-pass 3D reconstruction of the 5-room flat using the HDB PDF for topology, your laser measurements for usable interior space, and photos for wall/floor finishes.</p>
     <span class="badge">Draft: dimensions may have small measurement error</span>
+    <button class="overlay-toggle" type="button">Hide dimensions</button>
 
     <h2>How to view</h2>
     <ul>
       <li>Drag to orbit.</li>
       <li>Scroll to zoom.</li>
       <li>Right-drag / two-finger drag to pan.</li>
+    </ul>
+
+    <h2>Measurement overlay</h2>
+    <ul>
+      <li><strong style="color:#60a5fa">Blue</strong>: floor-plane laser measurements.</li>
+      <li><strong style="color:#f87171">Red</strong>: measured ceiling height.</li>
+      <li>Labels show inches first, then metres.</li>
     </ul>
 
     <h2>Measured values</h2>
@@ -539,6 +659,14 @@ function renderPanel() {
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
   `
+
+  const toggle = panel.querySelector<HTMLButtonElement>('.overlay-toggle')
+  const overlay = scene.getObjectByName('measurement overlay')
+  toggle?.addEventListener('click', () => {
+    if (!overlay) return
+    overlay.visible = !overlay.visible
+    toggle.textContent = overlay.visible ? 'Hide dimensions' : 'Show dimensions'
+  })
 }
 
 function resize() {
