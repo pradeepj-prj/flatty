@@ -12,8 +12,8 @@ const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
 const viewStyle = {
   background: '#e5e7eb',
-  floor: '#fafaf8',
-  wall: '#b8bec6',
+  floor: '#a9784f',
+  wall: '#ffffff',
   windows: '#d8dde2',
 } satisfies Record<string, Color>
 
@@ -638,8 +638,8 @@ function renderPanel() {
 
     <h2>Display style</h2>
     <ul>
-      <li>Floors use a near-white finish, with a cool-grey floor distinguishing the household shelter.</li>
-      <li>Walls use a contrasting neutral grey; measurements use blue for the floor plane and red for ceiling height.</li>
+      <li>Floors use an oak-brown finish, with a cool-grey floor distinguishing the household shelter.</li>
+      <li>Walls use a white finish; measurements use blue for the floor plane and red for ceiling height.</li>
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
   `
