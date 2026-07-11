@@ -185,7 +185,7 @@ const walls: Wall[] = [
   { from: [0, 217.1], to: [106, 217.1] },
 
   // Partitions. Door gaps are intentionally approximate and left open.
-  { from: [106, 0], to: [106, 130] },
+  // Bedroom 3 is open to the living/dining area; the original partition wall was removed.
   { from: [231.5, 0], to: [231.5, 124.9] },
   { from: [353.5, 0], to: [353.5, 124.9] },
   { from: [231.5, 124.9], to: [310, 124.9] },
