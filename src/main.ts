@@ -11,8 +11,9 @@ const livingDepthIn = 105
 const livingFacadeZIn = bedroomDatumZIn - livingDepthIn
 const bedroom3BackZIn = livingFacadeZIn + 166.5
 const viewStyle = {
-  background: '#dfe4ea',
-  model: '#f7f7f4',
+  background: '#e5e7eb',
+  floor: '#fafaf8',
+  wall: '#b8bec6',
   windows: '#d8dde2',
 } satisfies Record<string, Color>
 
@@ -367,7 +368,7 @@ function createBaseFloor() {
 
   const geometry = new THREE.ShapeGeometry(shape)
   geometry.rotateX(Math.PI / 2)
-  const material = materialFor('wall')
+  const material = materialFor('livingFloor')
   material.side = THREE.DoubleSide
   const mesh = new THREE.Mesh(geometry, material)
   mesh.name = 'continuous base floor'
@@ -551,9 +552,10 @@ function validateRoomInterference(roomData: Room[]) {
   }
 }
 
-function materialFor(_key: keyof typeof finishes) {
+function materialFor(key: keyof typeof finishes) {
+  const floorFinishes: Array<keyof typeof finishes> = ['livingFloor', 'bedroomFloor', 'kitchenFloor', 'bathFloor']
   return new THREE.MeshStandardMaterial({
-    color: viewStyle.model,
+    color: floorFinishes.includes(key) ? viewStyle.floor : viewStyle.wall,
     roughness: 0.86,
     metalness: 0,
   })
@@ -614,7 +616,7 @@ function renderPanel() {
 
     <h2>Display style</h2>
     <ul>
-      <li>All model surfaces use a neutral white clay finish so room edges and dimensions remain clear.</li>
+      <li>Floors use a near-white finish and walls use a contrasting neutral grey.</li>
       <li>Only measurement annotations retain color: blue for the floor plane and red for ceiling height.</li>
       <li>Existing loose furniture is intentionally omitted for now.</li>
     </ul>
