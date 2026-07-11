@@ -7,11 +7,19 @@
   </head>
   <body>
     <main id="app">
-      <canvas id="scene"></canvas>
-      <nav id="view-modes" aria-label="View mode">
-        <button class="view-mode is-active" data-view="2d" type="button" aria-pressed="true">2D</button>
-        <button class="view-mode" data-view="3d" type="button" aria-pressed="false">3D</button>
-      </nav>
+      <header id="model-toolbar">
+        <nav class="control-group" aria-label="View mode">
+          <button class="control-button view-mode is-active" data-view="2d" type="button" aria-pressed="true">2D</button>
+          <button class="control-button view-mode" data-view="3d" type="button" aria-pressed="false">3D</button>
+        </nav>
+        <div class="control-group" aria-label="Model overlays">
+          <button class="control-button display-toggle" data-display="labels" type="button" aria-pressed="false">Labels</button>
+          <button class="control-button display-toggle" data-display="dimensions" type="button" aria-pressed="false">Dimensions</button>
+        </div>
+      </header>
+      <section id="viewport" aria-label="Flat model viewport">
+        <canvas id="scene"></canvas>
+      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -6,6 +6,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const INCH_TO_METER = 0.0254
 const wallHeightIn = 101.7
 const wallThicknessIn = 4.5
+const windowTopIn = 94
+const hallWindowSillIn = 8
+const roomWindowSillIn = 48
 const doorOpenAngleDegrees = 45
 const bedroomDatumZIn = 124.9
 const livingDepthIn = 105
@@ -43,7 +46,9 @@ const viewStyle = {
   background: '#94a3b8',
   floor: '#a9784f',
   wall: '#ffffff',
-  windows: '#d8dde2',
+  windows: '#b9dce8',
+  windowFrames: '#e2e8f0',
+  sunbeams: '#ffe2a8',
   edges: '#475569',
 } satisfies Record<string, Color>
 
@@ -65,6 +70,7 @@ type Room = {
   depthIn: number
   floor: keyof typeof finishes
   floorOutlineIn?: Array<[number, number]>
+  receivesShadow?: boolean
   notes?: string
 }
 
@@ -74,6 +80,18 @@ type Wall = {
   finish?: keyof typeof finishes
   heightIn?: number
   thicknessIn?: number
+  castsShadow?: boolean
+}
+
+type Window = {
+  name: string
+  from: [number, number]
+  to: [number, number]
+  sillHeightIn: number
+  heightIn: number
+  panes?: number
+  inwardDirection: [number, number]
+  lightDepthIn: number
 }
 
 type Door = {
@@ -177,6 +195,7 @@ const rooms: Room[] = [
     widthIn: 106,
     depthIn: 166.5,
     floor: 'bedroomFloor',
+    receivesShadow: false,
     notes: 'Measured usable space; the partition to Living / Dining was removed.',
   },
   {
@@ -271,7 +290,7 @@ const rooms: Room[] = [
 
 const walls: Wall[] = [
   // Main facade and exterior shell, simplified from the HDB plan.
-  { from: [240.2, 0], to: [525.6, 0] },
+  { from: [240.2, 0], to: [387.8, 0] },
   { from: [0, livingFacadeZIn], to: [240.2, livingFacadeZIn] },
   { from: [525.6, 0], to: [525.6, 253.9] },
   { from: [426.2, 362.2], to: [230.2, 362.2] },
@@ -280,8 +299,8 @@ const walls: Wall[] = [
   { from: [88.6, 371.25], to: [106, 371.25] },
   { from: [230.2, 362.2], to: [230.2, 446.85] },
   { from: [0, livingFacadeZIn], to: [0, householdShelterBackZIn] },
-  { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn] },
-  { from: [106, bedroom3BackZIn], to: [106, householdShelterBackZIn] },
+  { from: [0, bedroom3BackZIn], to: [106, bedroom3BackZIn], castsShadow: false },
+  { from: [106, bedroom3BackZIn], to: [106, householdShelterBackZIn], castsShadow: false },
   { from: [0, householdShelterBackZIn], to: [106, householdShelterBackZIn] },
   { from: [106, householdShelterBackZIn], to: [106, entranceDoorStartZIn] },
   { from: [106, entranceDoorEndZIn], to: [106, 371.25] },
@@ -310,7 +329,69 @@ const walls: Wall[] = [
   // The kitchen and service yard are one open space with no partition wall.
 
   // Photo-observed accent finish in the main bedroom.
-  { from: [387.8, 0], to: [mainBedroomRightXIn, 0], finish: 'accentTaupe' },
+  { from: [387.8, 0], to: [525.6, 0], finish: 'accentTaupe' },
+]
+
+const windows: Window[] = [
+  {
+    name: 'Bedroom 3 / Living window',
+    from: [23, livingFacadeZIn],
+    to: [83, livingFacadeZIn],
+    sillHeightIn: hallWindowSillIn,
+    heightIn: windowTopIn - hallWindowSillIn,
+    panes: 2,
+    inwardDirection: [0, 1],
+    lightDepthIn: 90,
+  },
+  {
+    name: 'Living / Dining window',
+    from: [117, livingFacadeZIn],
+    to: [224, livingFacadeZIn],
+    sillHeightIn: hallWindowSillIn,
+    heightIn: windowTopIn - hallWindowSillIn,
+    panes: 4,
+    inwardDirection: [0, 1],
+    lightDepthIn: 90,
+  },
+  {
+    name: 'Bedroom 2 window',
+    from: [275.8, 0],
+    to: [377.8, 0],
+    sillHeightIn: roomWindowSillIn,
+    heightIn: windowTopIn - roomWindowSillIn,
+    panes: 4,
+    inwardDirection: [0, 1],
+    lightDepthIn: 80,
+  },
+  {
+    name: 'Main bedroom window',
+    from: [405.95, 0],
+    to: [506.95, 0],
+    sillHeightIn: roomWindowSillIn,
+    heightIn: windowTopIn - roomWindowSillIn,
+    panes: 4,
+    inwardDirection: [0, 1],
+    lightDepthIn: 90,
+  },
+  {
+    name: 'Suggested Study window',
+    from: [230.2, 382],
+    to: [230.2, 436],
+    sillHeightIn: roomWindowSillIn,
+    heightIn: windowTopIn - roomWindowSillIn,
+    panes: 2,
+    inwardDirection: [-1, 0],
+    lightDepthIn: 75,
+  },
+  {
+    name: 'Service Yard window',
+    from: [426.2, 277.4],
+    to: [426.2, 348.4],
+    sillHeightIn: roomWindowSillIn,
+    heightIn: windowTopIn - roomWindowSillIn,
+    inwardDirection: [-1, 0],
+    lightDepthIn: 42,
+  },
 ]
 
 const doors: Door[] = [
@@ -371,9 +452,10 @@ const doors: Door[] = [
 
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
 const viewButtons = document.querySelectorAll<HTMLButtonElement>('.view-mode')
+const displayButtons = document.querySelectorAll<HTMLButtonElement>('.display-toggle')
 
-if (!canvasElement || viewButtons.length === 0) {
-  throw new Error('Flatty could not find the scene canvas or view controls.')
+if (!canvasElement || viewButtons.length === 0 || displayButtons.length === 0) {
+  throw new Error('Flatty could not find the scene canvas or model controls.')
 }
 
 const canvas = canvasElement
@@ -397,15 +479,16 @@ camera2d.up.set(0, 0, -1)
 camera2d.lookAt(m(planCenter.xIn), 0, m(planCenter.zIn))
 let activeCamera: THREE.Camera = camera2d
 
-const roomFloors: THREE.Mesh[] = []
-const roomDimensionOverlays = new Map<Room, THREE.Group>()
+const roomLabels: THREE.Sprite[] = []
+const roomDimensionOverlays: THREE.Group[] = []
 const doorModels: DoorModel[] = []
 const doorHitAreas: THREE.Mesh[] = []
 const doorPlanGraphics: THREE.Object3D[] = []
+const windowLightBeams: THREE.Mesh[] = []
+const windowLightMaterials: THREE.ShaderMaterial[] = []
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 const clock = new THREE.Clock()
-let hoveredRoom: Room | undefined
 let doorPointerDown: [number, number] | undefined
 
 const controls = new OrbitControls(camera3d, renderer.domElement)
@@ -426,12 +509,15 @@ sun.shadow.mapSize.set(2048, 2048)
 scene.add(sun)
 
 validateRoomInterference(rooms)
+validateWindowOpenings(windows, walls)
 buildFlat()
 bindViewControls()
 resize()
 renderer.setAnimationLoop(() => {
+  const deltaSeconds = clock.getDelta()
   if (controls.enabled) controls.update()
-  updateDoorAnimations(clock.getDelta())
+  updateDoorAnimations(deltaSeconds)
+  updateWindowLight(clock.elapsedTime)
   renderer.render(scene, activeCamera)
 })
 window.addEventListener('resize', resize)
@@ -444,26 +530,25 @@ function buildFlat() {
   flat.add(createBaseFloor())
 
   for (const room of rooms) {
-    const floor = createFloor(room)
-    floor.userData.room = room
-    roomFloors.push(floor)
-    flat.add(floor)
-    flat.add(createRoomLabel(room))
+    flat.add(createFloor(room))
+
+    const label = createRoomLabel(room)
+    roomLabels.push(label)
+    flat.add(label)
 
     const dimensions = createRoomDimensionOverlay(room)
-    roomDimensionOverlays.set(room, dimensions)
+    roomDimensionOverlays.push(dimensions)
     flat.add(dimensions)
   }
 
   for (const wall of walls) {
-    flat.add(createWall(wall, walls))
+    flat.add(createWall(wall, walls, windows))
   }
 
   for (const door of doors) {
     flat.add(createDoor(door))
   }
 
-  flat.add(createNorthLightWindowStrip())
   addModelEdges(flat)
 }
 
@@ -521,7 +606,7 @@ function createFloor(room: Room) {
   } else {
     mesh.position.set(m(room.xIn + room.widthIn / 2), -0.02, m(room.zIn + room.depthIn / 2))
   }
-  mesh.receiveShadow = true
+  mesh.receiveShadow = room.receivesShadow ?? true
   return mesh
 }
 
@@ -538,7 +623,7 @@ function createFloorOutlineGeometry(outlineIn: Array<[number, number]>) {
   return geometry
 }
 
-function createWall(wall: Wall, allWalls: Wall[]) {
+function createWall(wall: Wall, allWalls: Wall[], allWindows: Window[]) {
   const [x1, z1] = wall.from
   const [x2, z2] = wall.to
   const dx = x2 - x1
@@ -547,28 +632,262 @@ function createWall(wall: Wall, allWalls: Wall[]) {
   const direction: [number, number] = [dx / length, dz / length]
   const startExtension = orthogonalJoinExtension(wall.from, direction, wall, allWalls)
   const endExtension = orthogonalJoinExtension(wall.to, direction, wall, allWalls)
-  const extendedFrom = [
-    x1 - direction[0] * startExtension,
-    z1 - direction[1] * startExtension,
-  ] as const
-  const extendedTo = [
-    x2 + direction[0] * endExtension,
-    z2 + direction[1] * endExtension,
-  ] as const
   const height = wall.heightIn ?? wallHeightIn
   const thickness = wall.thicknessIn ?? wallThicknessIn
-  const geometry = new THREE.BoxGeometry(m(length + startExtension + endExtension), m(height), m(thickness))
-  const mesh = new THREE.Mesh(geometry, materialFor(wall.finish ?? 'wall'))
-  mesh.name = 'wall'
-  mesh.position.set(
-    m((extendedFrom[0] + extendedTo[0]) / 2),
-    m(height / 2),
-    m((extendedFrom[1] + extendedTo[1]) / 2),
+  const wallWindows = allWindows
+    .filter((window) => pointOnWall(window.from, wall) && pointOnWall(window.to, wall))
+    .map((window) => ({
+      window,
+      startIn: Math.min(projectOntoWall(window.from, wall, direction), projectOntoWall(window.to, wall, direction)),
+      endIn: Math.max(projectOntoWall(window.from, wall, direction), projectOntoWall(window.to, wall, direction)),
+    }))
+    .sort((a, b) => a.startIn - b.startIn)
+
+  const group = new THREE.Group()
+  group.name = wallWindows.length > 0 ? 'wall with windows' : 'wall'
+  let cursorIn = -startExtension
+
+  for (const opening of wallWindows) {
+    addWallSection(group, wall, direction, cursorIn, opening.startIn, 0, height, thickness)
+    addWallSection(group, wall, direction, opening.startIn, opening.endIn, 0, opening.window.sillHeightIn, thickness)
+
+    const lintelBottomIn = opening.window.sillHeightIn + opening.window.heightIn
+    addWallSection(
+      group,
+      wall,
+      direction,
+      opening.startIn,
+      opening.endIn,
+      lintelBottomIn,
+      height - lintelBottomIn,
+      thickness,
+    )
+    group.add(createWindow(opening.window, wall, direction, opening.startIn, opening.endIn, thickness))
+    cursorIn = opening.endIn
+  }
+
+  addWallSection(group, wall, direction, cursorIn, length + endExtension, 0, height, thickness)
+  return group
+}
+
+function addWallSection(
+  group: THREE.Group,
+  wall: Wall,
+  direction: [number, number],
+  startIn: number,
+  endIn: number,
+  bottomIn: number,
+  heightIn: number,
+  thicknessIn: number,
+) {
+  const lengthIn = endIn - startIn
+  if (lengthIn <= 0.01 || heightIn <= 0.01) return
+
+  const centerIn = (startIn + endIn) / 2
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(m(lengthIn), m(heightIn), m(thicknessIn)),
+    materialFor(wall.finish ?? 'wall'),
   )
-  mesh.rotation.y = -Math.atan2(dz, dx)
-  mesh.castShadow = true
+  mesh.name = 'wall section'
+  mesh.position.set(
+    m(wall.from[0] + direction[0] * centerIn),
+    m(bottomIn + heightIn / 2),
+    m(wall.from[1] + direction[1] * centerIn),
+  )
+  mesh.rotation.y = -Math.atan2(direction[1], direction[0])
+  mesh.castShadow = wall.castsShadow ?? true
   mesh.receiveShadow = true
-  return mesh
+  group.add(mesh)
+}
+
+function createWindow(
+  window: Window,
+  wall: Wall,
+  direction: [number, number],
+  startIn: number,
+  endIn: number,
+  wallThicknessIn: number,
+) {
+  const group = new THREE.Group()
+  group.name = window.name
+  const widthIn = endIn - startIn
+  const centerIn = (startIn + endIn) / 2
+  const angle = -Math.atan2(direction[1], direction[0])
+  const centerXIn = wall.from[0] + direction[0] * centerIn
+  const centerZIn = wall.from[1] + direction[1] * centerIn
+
+  const glass = new THREE.Mesh(
+    new THREE.BoxGeometry(m(widthIn), m(window.heightIn), m(0.4)),
+    new THREE.MeshStandardMaterial({
+      color: viewStyle.windows,
+      transparent: true,
+      opacity: 0.42,
+      roughness: 0.2,
+      metalness: 0,
+      depthWrite: false,
+    }),
+  )
+  glass.name = `${window.name} glass`
+  glass.position.set(centerXIn * INCH_TO_METER, m(window.sillHeightIn + window.heightIn / 2), centerZIn * INCH_TO_METER)
+  glass.rotation.y = angle
+  group.add(glass)
+
+  const frameWidthIn = 1.5
+  const frameDepthIn = wallThicknessIn + 0.5
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: viewStyle.windowFrames, roughness: 0.65 })
+  const addFrame = (offsetIn: number, yIn: number, frameLengthIn: number, frameHeightIn: number) => {
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(m(frameLengthIn), m(frameHeightIn), m(frameDepthIn)),
+      frameMaterial,
+    )
+    frame.name = `${window.name} frame`
+    frame.position.set(
+      m(wall.from[0] + direction[0] * (startIn + offsetIn)),
+      m(yIn),
+      m(wall.from[1] + direction[1] * (startIn + offsetIn)),
+    )
+    frame.rotation.y = angle
+    frame.castShadow = true
+    group.add(frame)
+  }
+
+  addFrame(widthIn / 2, window.sillHeightIn + frameWidthIn / 2, widthIn, frameWidthIn)
+  addFrame(widthIn / 2, window.sillHeightIn + window.heightIn - frameWidthIn / 2, widthIn, frameWidthIn)
+  addFrame(0, window.sillHeightIn + window.heightIn / 2, frameWidthIn, window.heightIn)
+  addFrame(widthIn, window.sillHeightIn + window.heightIn / 2, frameWidthIn, window.heightIn)
+  if (window.panes) {
+    addFrame(widthIn / 2, window.sillHeightIn + window.heightIn / 2, widthIn, frameWidthIn)
+    for (let pane = 1; pane < window.panes; pane += 1) {
+      addFrame(widthIn * pane / window.panes, window.sillHeightIn + window.heightIn / 2, frameWidthIn, window.heightIn)
+    }
+  }
+
+  group.add(createWindowLight(window))
+  return group
+}
+
+function createWindowLight(window: Window) {
+  const dx = window.to[0] - window.from[0]
+  const dz = window.to[1] - window.from[1]
+  const widthIn = Math.hypot(dx, dz)
+  const tangent: [number, number] = [dx / widthIn, dz / widthIn]
+  const center: [number, number] = [
+    (window.from[0] + window.to[0]) / 2,
+    (window.from[1] + window.to[1]) / 2,
+  ]
+  const nearWidthIn = widthIn * 0.9
+  const farWidthIn = widthIn * 0.72
+  const nearBottomIn = window.sillHeightIn + 3
+  const nearTopIn = window.sillHeightIn + window.heightIn - 3
+  const farHeightIn = Math.max(18, (nearTopIn - nearBottomIn) * 0.55)
+  const farBottomIn = 1
+  const farTopIn = farBottomIn + farHeightIn
+
+  const positions: number[] = []
+  const progress: number[] = []
+  const sides: number[] = []
+  const addVertex = (sideIn: number, depthIn: number, yIn: number, beamProgress: number) => {
+    positions.push(
+      m(center[0] + tangent[0] * sideIn + window.inwardDirection[0] * depthIn),
+      m(yIn),
+      m(center[1] + tangent[1] * sideIn + window.inwardDirection[1] * depthIn),
+    )
+    progress.push(beamProgress)
+    sides.push(sideIn < 0 ? -1 : 1)
+  }
+
+  addVertex(-nearWidthIn / 2, 0, nearBottomIn, 0)
+  addVertex(nearWidthIn / 2, 0, nearBottomIn, 0)
+  addVertex(nearWidthIn / 2, 0, nearTopIn, 0)
+  addVertex(-nearWidthIn / 2, 0, nearTopIn, 0)
+  addVertex(-farWidthIn / 2, window.lightDepthIn, farBottomIn, 1)
+  addVertex(farWidthIn / 2, window.lightDepthIn, farBottomIn, 1)
+  addVertex(farWidthIn / 2, window.lightDepthIn, farTopIn, 1)
+  addVertex(-farWidthIn / 2, window.lightDepthIn, farTopIn, 1)
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('beamProgress', new THREE.Float32BufferAttribute(progress, 1))
+  geometry.setAttribute('beamSide', new THREE.Float32BufferAttribute(sides, 1))
+  geometry.setIndex([
+    0, 1, 5, 0, 5, 4,
+    3, 7, 6, 3, 6, 2,
+    0, 4, 7, 0, 7, 3,
+    1, 2, 6, 1, 6, 5,
+    0, 3, 2, 0, 2, 1,
+    4, 5, 6, 4, 6, 7,
+  ])
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      beamColor: { value: new THREE.Color(viewStyle.sunbeams) },
+      time: { value: 0 },
+      phase: { value: Math.random() * Math.PI * 2 },
+      opacity: { value: 0.11 },
+    },
+    vertexShader: `
+      uniform float time;
+      uniform float phase;
+      attribute float beamProgress;
+      attribute float beamSide;
+      varying float vProgress;
+      varying float vSide;
+      void main() {
+        vProgress = beamProgress;
+        vSide = beamSide;
+        vec3 flutteredPosition = position;
+        flutteredPosition.y += sin(time * 1.1 + phase + beamProgress * 6.0 + beamSide * 1.7)
+          * 0.025 * beamProgress;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(flutteredPosition, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 beamColor;
+      uniform float time;
+      uniform float phase;
+      uniform float opacity;
+      varying float vProgress;
+      varying float vSide;
+      void main() {
+        float fade = 1.0 - smoothstep(0.52, 1.0, vProgress);
+        float softEdge = smoothstep(0.0, 0.65, 1.0 - abs(vSide));
+        float edgeFade = mix(0.72, 1.0, softEdge);
+        float drift = 0.9 + 0.1 * sin(time * 0.8 + phase + vProgress * 4.0);
+        float flowA = 0.5 + 0.5 * sin(
+          vProgress * 19.0 - time * 1.25 + sin(vSide * 4.0 + time * 0.32 + phase) * 1.7
+        );
+        float flowB = 0.5 + 0.5 * sin(
+          vProgress * 11.0 - time * 0.72 - sin(vSide * 6.0 - time * 0.24 + phase) * 1.3
+        );
+        float wisps = smoothstep(0.68, 0.98, flowA) * 0.62 + smoothstep(0.78, 0.99, flowB) * 0.3;
+        float flutter = 0.88 + 0.12 * sin(time * 1.9 + phase * 0.7 + vProgress * 17.0 + vSide * 4.0);
+        float brightness = 0.82 + wisps * 0.42;
+        gl_FragColor = vec4(beamColor, opacity * fade * edgeFade * drift * flutter * brightness);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  })
+  const beam = new THREE.Mesh(geometry, material)
+  beam.name = `${window.name} animated light`
+  beam.userData.skipEdges = true
+  beam.visible = false
+  beam.renderOrder = 2
+  windowLightBeams.push(beam)
+  windowLightMaterials.push(material)
+  return beam
+}
+
+function updateWindowLight(elapsedSeconds: number) {
+  for (const material of windowLightMaterials) {
+    material.uniforms.time.value = elapsedSeconds
+  }
+}
+
+function projectOntoWall(point: [number, number], wall: Wall, direction: [number, number]) {
+  return (point[0] - wall.from[0]) * direction[0] + (point[1] - wall.from[1]) * direction[1]
 }
 
 function createDoor(door: Door) {
@@ -588,7 +907,7 @@ function createDoor(door: Door) {
   )
   leaf.name = `${door.name} leaf`
   leaf.position.set(m(door.widthIn / 2), m(door.heightIn / 2), 0)
-  leaf.castShadow = true
+  leaf.castShadow = false
   leaf.receiveShadow = true
   pivot.add(leaf)
 
@@ -707,23 +1026,6 @@ function pointOnWall(point: [number, number], wall: Wall) {
   const projection = pointDx * dx + pointDz * dz
 
   return cross < 0.01 * Math.sqrt(lengthSquared) && projection >= -0.01 && projection <= lengthSquared + 0.01
-}
-
-function createNorthLightWindowStrip() {
-  const group = new THREE.Group()
-  group.name = 'approximate window bands'
-  const windowMaterial = new THREE.MeshBasicMaterial({ color: viewStyle.windows, transparent: true, opacity: 0.55 })
-  for (const [xIn, widthIn] of [
-    [12, 82],
-    [120, 90],
-    [250, 82],
-    [370, 92],
-  ] as const) {
-    const window = new THREE.Mesh(new THREE.BoxGeometry(m(widthIn), m(35), 0.03), windowMaterial)
-    window.position.set(m(xIn + widthIn / 2), m(58), m(-2.4))
-    group.add(window)
-  }
-  return group
 }
 
 function createRoomDimensionOverlay(room: Room) {
@@ -867,6 +1169,24 @@ function validateRoomInterference(roomData: Room[]) {
   }
 }
 
+function validateWindowOpenings(windowData: Window[], wallData: Wall[]) {
+  const invalidWindows = windowData.filter((window) => {
+    const matchingWalls = wallData.filter((wall) => pointOnWall(window.from, wall) && pointOnWall(window.to, wall))
+    const topIn = window.sillHeightIn + window.heightIn
+    const inwardLength = Math.hypot(...window.inwardDirection)
+    return matchingWalls.length !== 1
+      || window.heightIn <= 0
+      || window.sillHeightIn < 0
+      || topIn > wallHeightIn
+      || window.lightDepthIn <= 0
+      || Math.abs(inwardLength - 1) > 0.001
+  })
+
+  if (invalidWindows.length > 0) {
+    throw new Error(`Invalid window openings: ${invalidWindows.map((window) => window.name).join(', ')}`)
+  }
+}
+
 function materialFor(key: keyof typeof finishes) {
   const finish: Finish = finishes[key]
   const floorFinishes: Array<keyof typeof finishes> = [
@@ -901,28 +1221,29 @@ function bindViewControls() {
       }
     })
   })
-  canvas.addEventListener('pointermove', showHoveredRoomDimensions)
+  displayButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.dataset.display === 'labels' || button.dataset.display === 'dimensions') {
+        const visible = button.getAttribute('aria-pressed') !== 'true'
+        setOverlayVisibility(button.dataset.display, visible)
+      }
+    })
+  })
+  canvas.addEventListener('pointermove', showDoorPointer)
   canvas.addEventListener('pointerdown', rememberDoorPointerDown)
   canvas.addEventListener('pointerup', toggleClickedDoor)
   canvas.addEventListener('pointercancel', () => { doorPointerDown = undefined })
   canvas.addEventListener('pointerleave', () => {
     doorPointerDown = undefined
     canvas.style.cursor = ''
-    setHoveredRoom(undefined)
   })
   setViewMode('2d')
+  setOverlayVisibility('labels', false)
+  setOverlayVisibility('dimensions', false)
 }
 
-function showHoveredRoomDimensions(event: PointerEvent) {
-  const doorModel = doorModelAtPointer(event)
-  canvas.style.cursor = doorModel ? 'pointer' : ''
-  if (doorModel) {
-    setHoveredRoom(undefined)
-    return
-  }
-
-  const room = raycaster.intersectObjects(roomFloors)[0]?.object.userData.room as Room | undefined
-  setHoveredRoom(room)
+function showDoorPointer(event: PointerEvent) {
+  canvas.style.cursor = doorModelAtPointer(event) ? 'pointer' : ''
 }
 
 function rememberDoorPointerDown(event: PointerEvent) {
@@ -948,11 +1269,14 @@ function doorModelAtPointer(event: PointerEvent) {
   return raycaster.intersectObjects(doorHitAreas)[0]?.object.userData.doorModel as DoorModel | undefined
 }
 
-function setHoveredRoom(room: Room | undefined) {
-  if (room === hoveredRoom) return
-  if (hoveredRoom) roomDimensionOverlays.get(hoveredRoom)!.visible = false
-  hoveredRoom = room
-  if (hoveredRoom) roomDimensionOverlays.get(hoveredRoom)!.visible = true
+function setOverlayVisibility(option: 'labels' | 'dimensions', visible: boolean) {
+  const overlays = option === 'labels' ? roomLabels : roomDimensionOverlays
+  overlays.forEach((overlay) => { overlay.visible = visible })
+  displayButtons.forEach((button) => {
+    if (button.dataset.display !== option) return
+    button.classList.toggle('is-active', visible)
+    button.setAttribute('aria-pressed', String(visible))
+  })
 }
 
 function setViewMode(view: '2d' | '3d') {
@@ -960,7 +1284,7 @@ function setViewMode(view: '2d' | '3d') {
   activeCamera = is3d ? camera3d : camera2d
   controls.enabled = is3d
   doorPlanGraphics.forEach((graphic) => { graphic.visible = !is3d })
-  setHoveredRoom(undefined)
+  windowLightBeams.forEach((beam) => { beam.visible = is3d })
   viewButtons.forEach((button) => {
     const isActive = button.dataset.view === view
     button.classList.toggle('is-active', isActive)
