@@ -466,6 +466,9 @@ const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
 const viewButtons = document.querySelectorAll<HTMLButtonElement>('.view-mode')
 const displayButtons = document.querySelectorAll<HTMLButtonElement>('.display-toggle')
 const furnitureCatalogElement = document.querySelector<HTMLElement>('#furniture-catalog')
+const furnitureBudgetTotalElement = document.querySelector<HTMLElement>('#furniture-budget-total')
+const furnitureBudgetCountElement = document.querySelector<HTMLElement>('#furniture-budget-count')
+const furnitureBudgetBreakdownElement = document.querySelector<HTMLElement>('#furniture-budget-breakdown')
 const furnitureStatusElement = document.querySelector<HTMLElement>('#furniture-status')
 const furnitureSelectionControls = document.querySelector<HTMLElement>('#furniture-selection-controls')
 const selectedFurnitureNameElement = document.querySelector<HTMLElement>('#selected-furniture-name')
@@ -477,6 +480,9 @@ if (
   || viewButtons.length === 0
   || displayButtons.length === 0
   || !furnitureCatalogElement
+  || !furnitureBudgetTotalElement
+  || !furnitureBudgetCountElement
+  || !furnitureBudgetBreakdownElement
   || !furnitureStatusElement
   || !furnitureSelectionControls
   || !selectedFurnitureNameElement
@@ -488,6 +494,9 @@ if (
 
 const canvas = canvasElement
 const furnitureCatalogPanel = furnitureCatalogElement
+const furnitureBudgetTotal = furnitureBudgetTotalElement
+const furnitureBudgetCount = furnitureBudgetCountElement
+const furnitureBudgetBreakdown = furnitureBudgetBreakdownElement
 const furnitureStatus = furnitureStatusElement
 const selectedFurnitureControls = furnitureSelectionControls
 const selectedFurnitureName = selectedFurnitureNameElement
@@ -557,6 +566,7 @@ validateWindowOpenings(windows, walls)
 buildFlat()
 buildFurnitureLibrary()
 restoreFurniturePlacements()
+updateFurnitureBudget()
 bindViewControls()
 resize()
 renderer.setAnimationLoop(() => {
@@ -1292,36 +1302,75 @@ function bindViewControls() {
 }
 
 function buildFurnitureLibrary() {
+  const furnitureByCategory = new Map<string, FurnitureDefinition[]>()
   for (const definition of furnitureCatalog) {
-    const button = document.createElement('button')
-    button.className = 'furniture-card'
-    button.type = 'button'
-    button.dataset.furnitureId = definition.id
-    button.setAttribute('aria-pressed', 'false')
-
-    const preview = document.createElement('span')
-    preview.className = 'furniture-card-preview'
-    const shape = document.createElement('span')
-    shape.className = `furniture-card-shape ${definition.kind}`
-    const longestSideIn = Math.max(definition.widthIn, definition.depthIn)
-    shape.style.setProperty('--preview-width', `${Math.max(14, definition.widthIn / longestSideIn * 34)}px`)
-    shape.style.setProperty('--preview-depth', `${Math.max(14, definition.depthIn / longestSideIn * 34)}px`)
-    shape.style.setProperty('--preview-color', definition.colors.primary)
-    preview.append(shape)
-
-    const copy = document.createElement('span')
-    copy.className = 'furniture-card-copy'
-    const name = document.createElement('span')
-    name.className = 'furniture-card-name'
-    name.textContent = definition.name
-    const detail = document.createElement('span')
-    detail.className = 'furniture-card-detail'
-    detail.textContent = `${definition.widthIn} × ${definition.depthIn} in · ${Math.round(definition.widthIn * 2.54)} × ${Math.round(definition.depthIn * 2.54)} cm`
-    copy.append(name, detail)
-    button.append(preview, copy)
-    button.addEventListener('click', () => chooseFurnitureToPlace(definition))
-    furnitureCatalogPanel.append(button)
+    furnitureByCategory.set(definition.category, [
+      ...(furnitureByCategory.get(definition.category) ?? []),
+      definition,
+    ])
   }
+
+  for (const [category, definitions] of furnitureByCategory) {
+    const section = document.createElement('details')
+    section.className = 'furniture-category'
+    section.open = true
+
+    const summary = document.createElement('summary')
+    summary.className = 'furniture-category-heading'
+    const title = document.createElement('span')
+    title.textContent = category
+    const count = document.createElement('span')
+    count.className = 'furniture-category-count'
+    count.textContent = String(definitions.length)
+    summary.append(title, count)
+
+    const items = document.createElement('div')
+    items.className = 'furniture-category-items'
+    definitions.forEach((definition) => items.append(createFurnitureCard(definition)))
+
+    section.append(summary, items)
+    furnitureCatalogPanel.append(section)
+  }
+}
+
+function createFurnitureCard(definition: FurnitureDefinition) {
+  const button = document.createElement('button')
+  button.className = 'furniture-card'
+  button.type = 'button'
+  button.dataset.furnitureId = definition.id
+  button.setAttribute('aria-pressed', 'false')
+
+  const preview = document.createElement('span')
+  preview.className = 'furniture-card-preview'
+  const shape = document.createElement('span')
+  shape.className = `furniture-card-shape ${definition.kind}`
+  const longestSideIn = Math.max(definition.widthIn, definition.depthIn)
+  shape.style.setProperty('--preview-width', `${Math.max(14, definition.widthIn / longestSideIn * 34)}px`)
+  shape.style.setProperty('--preview-depth', `${Math.max(14, definition.depthIn / longestSideIn * 34)}px`)
+  shape.style.setProperty('--preview-color', definition.colors.primary)
+  preview.append(shape)
+
+  const copy = document.createElement('span')
+  copy.className = 'furniture-card-copy'
+  const name = document.createElement('span')
+  name.className = 'furniture-card-name'
+  name.textContent = definition.name
+  const detail = document.createElement('span')
+  detail.className = 'furniture-card-detail'
+  detail.textContent = `${definition.widthIn} × ${definition.depthIn} in · ${Math.round(definition.widthIn * 2.54)} × ${Math.round(definition.depthIn * 2.54)} cm · ${formatFurnitureCost(definition.cost, 'tbd')}`
+  copy.append(name, detail)
+  button.append(preview, copy)
+  button.addEventListener('click', () => chooseFurnitureToPlace(definition))
+  return button
+}
+
+function formatFurnitureCost(cost: number, zeroMode: 'zero' | 'tbd' = 'zero') {
+  if (cost <= 0 && zeroMode === 'tbd') return 'Price TBD'
+  const fractionDigits = Number.isInteger(cost) ? 0 : 2
+  return `S$${cost.toLocaleString('en-US', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })}`
 }
 
 function chooseFurnitureToPlace(definition: FurnitureDefinition) {
@@ -1344,6 +1393,7 @@ function addFurniturePlacement(placement: FurniturePlacement) {
   group.traverse((object) => { object.userData.furnitureModel = model })
   furnitureModels.push(model)
   furnitureLayer.add(group)
+  updateFurnitureBudget()
   return model
 }
 
@@ -1515,7 +1565,37 @@ function deleteSelectedFurniture() {
   })
   selectFurnitureModel(undefined)
   saveFurniturePlacements()
+  updateFurnitureBudget()
   furnitureStatus.textContent = `${model.definition.name} removed.`
+}
+
+function updateFurnitureBudget() {
+  const totalCost = furnitureModels.reduce((total, model) => total + model.definition.cost, 0)
+  const itemCount = furnitureModels.length
+  const categoryTotals = new Map<string, number>()
+  for (const model of furnitureModels) {
+    categoryTotals.set(
+      model.definition.category,
+      (categoryTotals.get(model.definition.category) ?? 0) + model.definition.cost,
+    )
+  }
+
+  furnitureBudgetTotal.textContent = formatFurnitureCost(totalCost)
+  furnitureBudgetCount.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'} placed`
+  furnitureBudgetBreakdown.replaceChildren(
+    ...Array.from(categoryTotals.entries())
+      .filter(([, cost]) => cost > 0)
+      .map(([category, cost]) => {
+        const row = document.createElement('div')
+        row.className = 'budget-breakdown-row'
+        const label = document.createElement('span')
+        label.textContent = category
+        const value = document.createElement('strong')
+        value.textContent = formatFurnitureCost(cost)
+        row.append(label, value)
+        return row
+      }),
+  )
 }
 
 function handleFurnitureKeydown(event: KeyboardEvent) {
