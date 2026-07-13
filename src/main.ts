@@ -128,6 +128,12 @@ type FurnitureModel = {
   group: THREE.Group
 }
 
+type WallModel = {
+  id: string
+  wall: Wall
+  group: THREE.Group
+}
+
 const finishes = {
   livingFloor: {
     name: 'dark grey-brown floor',
@@ -474,6 +480,10 @@ const furnitureSelectionControls = document.querySelector<HTMLElement>('#furnitu
 const selectedFurnitureNameElement = document.querySelector<HTMLElement>('#selected-furniture-name')
 const rotateFurnitureButton = document.querySelector<HTMLButtonElement>('#rotate-furniture')
 const deleteFurnitureButton = document.querySelector<HTMLButtonElement>('#delete-furniture')
+const selectWallButtonElement = document.querySelector<HTMLButtonElement>('#select-wall')
+const flipWallButtonElement = document.querySelector<HTMLButtonElement>('#flip-wall')
+const exitWallButtonElement = document.querySelector<HTMLButtonElement>('#exit-wall')
+const libraryInstructionsElement = document.querySelector<HTMLElement>('#library-instructions')
 
 if (
   !canvasElement
@@ -488,6 +498,10 @@ if (
   || !selectedFurnitureNameElement
   || !rotateFurnitureButton
   || !deleteFurnitureButton
+  || !selectWallButtonElement
+  || !flipWallButtonElement
+  || !exitWallButtonElement
+  || !libraryInstructionsElement
 ) {
   throw new Error('Flatty could not find the scene canvas or model controls.')
 }
@@ -502,6 +516,10 @@ const selectedFurnitureControls = furnitureSelectionControls
 const selectedFurnitureName = selectedFurnitureNameElement
 const rotateFurniture = rotateFurnitureButton
 const deleteFurniture = deleteFurnitureButton
+const selectWallButton = selectWallButtonElement
+const flipWallButton = flipWallButtonElement
+const exitWallButton = exitWallButtonElement
+const libraryInstructions = libraryInstructionsElement
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(viewStyle.background)
@@ -520,6 +538,7 @@ const camera2d = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100)
 camera2d.position.set(m(planCenter.xIn), 20, m(planCenter.zIn))
 camera2d.up.set(0, 0, -1)
 camera2d.lookAt(m(planCenter.xIn), 0, m(planCenter.zIn))
+const wallCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100)
 let activeCamera: THREE.Camera = camera2d
 
 const roomLabels: THREE.Sprite[] = []
@@ -530,6 +549,7 @@ const doorPlanGraphics: THREE.Object3D[] = []
 const windowLightBeams: THREE.Mesh[] = []
 const windowLightMaterials: THREE.ShaderMaterial[] = []
 const floorHitAreas: THREE.Object3D[] = []
+const wallModels: WallModel[] = []
 const furnitureModels: FurnitureModel[] = []
 const furnitureLayer = new THREE.Group()
 furnitureLayer.name = 'Furniture placements'
@@ -542,7 +562,12 @@ let activeFurnitureDefinitionId: string | undefined
 let selectedFurnitureModel: FurnitureModel | undefined
 let draggedFurnitureModel: FurnitureModel | undefined
 let furnitureDragOffsetIn: [number, number] = [0, 0]
+let wallDragOffsetIn: [number, number] = [0, 0]
 let furnitureSelectionBox: THREE.BoxHelper | undefined
+let selectingWall = false
+let activeWallModel: WallModel | undefined
+let activeWallSide: 1 | -1 = 1
+const flatVisibility = new Map<THREE.Object3D, boolean>()
 
 const controls = new OrbitControls(camera3d, renderer.domElement)
 controls.enableDamping = true
@@ -560,6 +585,9 @@ sun.position.set(-3, 8, 4)
 sun.castShadow = true
 sun.shadow.mapSize.set(2048, 2048)
 scene.add(sun)
+
+const flatModel = new THREE.Group()
+flatModel.name = 'Flatty draft model'
 
 validateRoomInterference(rooms)
 validateWindowOpenings(windows, walls)
@@ -579,33 +607,31 @@ renderer.setAnimationLoop(() => {
 window.addEventListener('resize', resize)
 
 function buildFlat() {
-  const flat = new THREE.Group()
-  flat.name = 'Flatty draft model'
-  scene.add(flat)
+  scene.add(flatModel)
 
-  flat.add(createBaseFloor())
+  flatModel.add(createBaseFloor())
 
   for (const room of rooms) {
-    flat.add(createFloor(room))
+    flatModel.add(createFloor(room))
 
     const label = createRoomLabel(room)
     roomLabels.push(label)
-    flat.add(label)
+    flatModel.add(label)
 
     const dimensions = createRoomDimensionOverlay(room)
     roomDimensionOverlays.push(dimensions)
-    flat.add(dimensions)
+    flatModel.add(dimensions)
   }
 
   for (const wall of walls) {
-    flat.add(createWall(wall, walls, windows))
+    flatModel.add(createWall(wall, walls, windows))
   }
 
   for (const door of doors) {
-    flat.add(createDoor(door))
+    flatModel.add(createDoor(door))
   }
 
-  addModelEdges(flat)
+  addModelEdges(flatModel)
 }
 
 function addModelEdges(model: THREE.Group) {
@@ -724,7 +750,15 @@ function createWall(wall: Wall, allWalls: Wall[], allWindows: Window[]) {
   }
 
   addWallSection(group, wall, direction, cursorIn, length + endExtension, 0, height, thickness)
+  const model: WallModel = { id: wallId(wall), wall, group }
+  group.userData.wallModel = model
+  group.traverse((object) => { object.userData.wallModel = model })
+  wallModels.push(model)
   return group
+}
+
+function wallId(wall: Wall) {
+  return `${wall.from[0]},${wall.from[1]}:${wall.to[0]},${wall.to[1]}`
 }
 
 function addWallSection(
@@ -1295,15 +1329,20 @@ function bindViewControls() {
   })
   rotateFurniture.addEventListener('click', rotateSelectedFurniture)
   deleteFurniture.addEventListener('click', deleteSelectedFurniture)
+  selectWallButton.addEventListener('click', beginWallSelection)
+  flipWallButton.addEventListener('click', flipActiveWallSide)
+  exitWallButton.addEventListener('click', exitWallElevation)
   window.addEventListener('keydown', handleFurnitureKeydown)
   setViewMode('2d')
   setOverlayVisibility('labels', false)
   setOverlayVisibility('dimensions', false)
 }
 
-function buildFurnitureLibrary() {
+function buildFurnitureLibrary(surface: 'floor' | 'wall' = 'floor') {
+  furnitureCatalogPanel.replaceChildren()
   const furnitureByCategory = new Map<string, FurnitureDefinition[]>()
   for (const definition of furnitureCatalog) {
+    if ((definition.placementSurface ?? 'floor') !== surface) continue
     furnitureByCategory.set(definition.category, [
       ...(furnitureByCategory.get(definition.category) ?? []),
       definition,
@@ -1357,7 +1396,8 @@ function createFurnitureCard(definition: FurnitureDefinition) {
   name.textContent = definition.name
   const detail = document.createElement('span')
   detail.className = 'furniture-card-detail'
-  detail.textContent = `${definition.widthIn} × ${definition.depthIn} in · ${Math.round(definition.widthIn * 2.54)} × ${Math.round(definition.depthIn * 2.54)} cm · ${formatFurnitureCost(definition.cost, 'tbd')}`
+  const secondDimensionIn = definition.placementSurface === 'wall' ? definition.heightIn : definition.depthIn
+  detail.textContent = `${definition.widthIn} × ${secondDimensionIn} in · ${Math.round(definition.widthIn * 2.54)} × ${Math.round(secondDimensionIn * 2.54)} cm · ${formatFurnitureCost(definition.cost, 'tbd')}`
   copy.append(name, detail)
   button.append(preview, copy)
   button.addEventListener('click', () => chooseFurnitureToPlace(definition))
@@ -1376,8 +1416,12 @@ function formatFurnitureCost(cost: number, zeroMode: 'zero' | 'tbd' = 'zero') {
 function chooseFurnitureToPlace(definition: FurnitureDefinition) {
   activeFurnitureDefinitionId = definition.id
   selectFurnitureModel(undefined)
-  setViewMode('2d')
-  furnitureStatus.textContent = `${definition.name} selected. Click anywhere on the floor to place it.`
+  if (definition.placementSurface !== 'wall') setViewMode('2d')
+  furnitureStatus.textContent = definition.placementSurface === 'wall'
+    ? `${definition.name} selected. Click the wall elevation to mount it.`
+    : definition.stackable
+      ? `${definition.name} selected. Click the floor or a surface to place it.`
+      : `${definition.name} selected. Click anywhere on the floor to place it.`
   updateFurnitureCatalogSelection()
   canvas.style.cursor = 'crosshair'
 }
@@ -1385,11 +1429,11 @@ function chooseFurnitureToPlace(definition: FurnitureDefinition) {
 function addFurniturePlacement(placement: FurniturePlacement) {
   const definition = furnitureCatalog.find((item) => item.id === placement.furnitureId)
   if (!definition) return undefined
+  if (placement.surface === 'wall' && !wallModels.some((wall) => wall.id === placement.wallId)) return undefined
 
   const group = createFurnitureModel(definition, m)
-  group.position.set(m(placement.xIn), 0, m(placement.zIn))
-  group.rotation.y = THREE.MathUtils.degToRad(placement.rotationDegrees)
   const model: FurnitureModel = { placement, definition, group }
+  updateFurnitureTransform(model)
   group.traverse((object) => { object.userData.furnitureModel = model })
   furnitureModels.push(model)
   furnitureLayer.add(group)
@@ -1397,25 +1441,69 @@ function addFurniturePlacement(placement: FurniturePlacement) {
   return model
 }
 
+function updateFurnitureTransform(model: FurnitureModel) {
+  const { placement, group, definition } = model
+  if (placement.surface !== 'wall') {
+    group.position.set(m(placement.xIn), m(placement.elevationIn ?? 0), m(placement.zIn))
+    group.rotation.y = THREE.MathUtils.degToRad(placement.rotationDegrees)
+    return
+  }
+
+  const wallModel = wallModels.find((candidate) => candidate.id === placement.wallId)
+  if (!wallModel) return
+  const direction = wallDirection(wallModel.wall)
+  const normal: [number, number] = [-direction[1] * placement.side, direction[0] * placement.side]
+  const thicknessIn = wallModel.wall.thicknessIn ?? wallThicknessIn
+  const offsetIn = thicknessIn / 2 + definition.depthIn / 2
+  group.position.set(
+    m(wallModel.wall.from[0] + direction[0] * placement.uIn + normal[0] * offsetIn),
+    m(placement.elevationIn),
+    m(wallModel.wall.from[1] + direction[1] * placement.uIn + normal[1] * offsetIn),
+  )
+  group.rotation.y = Math.atan2(normal[0], normal[1])
+}
+
 function handleScenePointerMove(event: PointerEvent) {
   if (draggedFurnitureModel) {
-    const floorPoint = floorPointAtPointer(event)
-    if (floorPoint) {
-      draggedFurnitureModel.placement.xIn = floorPoint[0] + furnitureDragOffsetIn[0]
-      draggedFurnitureModel.placement.zIn = floorPoint[1] + furnitureDragOffsetIn[1]
-      draggedFurnitureModel.group.position.set(
-        m(draggedFurnitureModel.placement.xIn),
-        0,
-        m(draggedFurnitureModel.placement.zIn),
-      )
-      furnitureSelectionBox?.update()
+    if (draggedFurnitureModel.placement.surface === 'wall') {
+      const wallPoint = wallPointAtPointer(event)
+      if (wallPoint) {
+        draggedFurnitureModel.placement.uIn = wallPoint[0] + wallDragOffsetIn[0]
+        draggedFurnitureModel.placement.elevationIn = wallPoint[1] + wallDragOffsetIn[1]
+        clampWallPlacement(draggedFurnitureModel)
+        updateFurnitureTransform(draggedFurnitureModel)
+        furnitureSelectionBox?.update()
+      }
+    } else if (draggedFurnitureModel.definition.stackable) {
+      const surfacePoint = surfacePointAtPointer(event, draggedFurnitureModel)
+      if (surfacePoint) {
+        draggedFurnitureModel.placement.xIn = surfacePoint[0] + furnitureDragOffsetIn[0]
+        draggedFurnitureModel.placement.zIn = surfacePoint[2] + furnitureDragOffsetIn[1]
+        draggedFurnitureModel.placement.elevationIn = surfacePoint[1]
+        updateFurnitureTransform(draggedFurnitureModel)
+        furnitureSelectionBox?.update()
+      }
+    } else {
+      const floorPoint = floorPointAtPointer(event)
+      if (floorPoint) {
+        draggedFurnitureModel.placement.xIn = floorPoint[0] + furnitureDragOffsetIn[0]
+        draggedFurnitureModel.placement.zIn = floorPoint[1] + furnitureDragOffsetIn[1]
+        updateFurnitureTransform(draggedFurnitureModel)
+        furnitureSelectionBox?.update()
+      }
     }
     canvas.style.cursor = 'grabbing'
     return
   }
 
-  if (activeFurnitureDefinitionId && activeCamera === camera2d) {
-    canvas.style.cursor = floorPointAtPointer(event) ? 'crosshair' : 'not-allowed'
+  if (selectingWall) {
+    canvas.style.cursor = wallModelAtPointer(event) ? 'pointer' : 'not-allowed'
+    return
+  }
+
+  if (activeFurnitureDefinitionId && (activeCamera === camera2d || activeCamera === wallCamera)) {
+    const canPlace = activeCamera === wallCamera ? wallPointAtPointer(event) : floorPointAtPointer(event)
+    canvas.style.cursor = canPlace ? 'crosshair' : 'not-allowed'
     return
   }
 
@@ -1430,16 +1518,48 @@ function handleScenePointerMove(event: PointerEvent) {
 function handleScenePointerDown(event: PointerEvent) {
   if (event.button !== 0) return
 
-  if (activeFurnitureDefinitionId && activeCamera === camera2d) {
-    const floorPoint = floorPointAtPointer(event)
+  if (selectingWall) {
+    const wallModel = wallModelAtPointer(event)
+    if (wallModel) enterWallElevation(wallModel)
+    return
+  }
+
+  if (activeFurnitureDefinitionId && activeCamera === wallCamera && activeWallModel) {
+    const wallPoint = wallPointAtPointer(event)
     const definition = furnitureCatalog.find((item) => item.id === activeFurnitureDefinitionId)
-    if (!floorPoint || !definition) return
+    if (!wallPoint || !definition) return
+    const model = addFurniturePlacement({
+      id: crypto.randomUUID(),
+      furnitureId: definition.id,
+      surface: 'wall',
+      wallId: activeWallModel.id,
+      uIn: wallPoint[0],
+      elevationIn: wallPoint[1] - definition.heightIn / 2,
+      side: activeWallSide,
+    })
+    if (model) clampWallPlacement(model)
+    if (model) updateFurnitureTransform(model)
+    activeFurnitureDefinitionId = undefined
+    updateFurnitureCatalogSelection()
+    selectFurnitureModel(model)
+    saveFurniturePlacements()
+    furnitureStatus.textContent = `${definition.name} mounted. Drag it to adjust its position.`
+    return
+  }
+
+  if (activeFurnitureDefinitionId && activeCamera === camera2d) {
+    const definition = furnitureCatalog.find((item) => item.id === activeFurnitureDefinitionId)
+    if (!definition) return
+    const surfacePoint = definition.stackable ? surfacePointAtPointer(event) : undefined
+    const floorPoint = surfacePoint ? undefined : floorPointAtPointer(event)
+    if (!surfacePoint && !floorPoint) return
 
     const model = addFurniturePlacement({
       id: crypto.randomUUID(),
       furnitureId: definition.id,
-      xIn: floorPoint[0],
-      zIn: floorPoint[1],
+      xIn: surfacePoint ? surfacePoint[0] : floorPoint![0],
+      zIn: surfacePoint ? surfacePoint[2] : floorPoint![1],
+      elevationIn: surfacePoint ? surfacePoint[1] : 0,
       rotationDegrees: 0,
     })
     activeFurnitureDefinitionId = undefined
@@ -1454,15 +1574,37 @@ function handleScenePointerDown(event: PointerEvent) {
   if (furniture) {
     selectFurnitureModel(furniture)
     doorPointerDown = undefined
-    if (activeCamera === camera2d) {
-      const floorPoint = floorPointAtPointer(event)
-      if (floorPoint) {
+    if (activeCamera === wallCamera && furniture.placement.surface === 'wall') {
+      const wallPoint = wallPointAtPointer(event)
+      if (wallPoint) {
         draggedFurnitureModel = furniture
-        furnitureDragOffsetIn = [
-          furniture.placement.xIn - floorPoint[0],
-          furniture.placement.zIn - floorPoint[1],
+        wallDragOffsetIn = [
+          furniture.placement.uIn - wallPoint[0],
+          furniture.placement.elevationIn - wallPoint[1],
         ]
         canvas.setPointerCapture(event.pointerId)
+      }
+    } else if (activeCamera === camera2d && furniture.placement.surface !== 'wall') {
+      if (furniture.definition.stackable) {
+        const surfacePoint = surfacePointAtPointer(event, furniture)
+        if (surfacePoint) {
+          draggedFurnitureModel = furniture
+          furnitureDragOffsetIn = [
+            furniture.placement.xIn - surfacePoint[0],
+            furniture.placement.zIn - surfacePoint[2],
+          ]
+          canvas.setPointerCapture(event.pointerId)
+        }
+      } else {
+        const floorPoint = floorPointAtPointer(event)
+        if (floorPoint) {
+          draggedFurnitureModel = furniture
+          furnitureDragOffsetIn = [
+            furniture.placement.xIn - floorPoint[0],
+            furniture.placement.zIn - floorPoint[1],
+          ]
+          canvas.setPointerCapture(event.pointerId)
+        }
       }
     }
     return
@@ -1508,6 +1650,67 @@ function floorPointAtPointer(event: PointerEvent): [number, number] | undefined 
   return point ? [point.x / INCH_TO_METER, point.z / INCH_TO_METER] : undefined
 }
 
+// Nearest surface (floor or a furniture top) under the pointer, in inches.
+// The optional excluded model is skipped so a dragged item never lands on itself.
+function surfacePointAtPointer(
+  event: PointerEvent,
+  excludeModel?: FurnitureModel,
+): [number, number, number] | undefined {
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, activeCamera)
+  const targets = [...floorHitAreas, ...furnitureLayer.children]
+  const hit = raycaster
+    .intersectObjects(targets, true)
+    .find((intersection) => !excludeModel || intersection.object.userData.furnitureModel !== excludeModel)
+  if (!hit) return undefined
+  return [hit.point.x / INCH_TO_METER, hit.point.y / INCH_TO_METER, hit.point.z / INCH_TO_METER]
+}
+
+function wallModelAtPointer(event: PointerEvent) {
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, activeCamera)
+  return raycaster
+    .intersectObjects(wallModels.map((model) => model.group), true)
+    .find((intersection) => intersection.object.userData.wallModel)
+    ?.object.userData.wallModel as WallModel | undefined
+}
+
+function wallPointAtPointer(event: PointerEvent): [number, number] | undefined {
+  if (!activeWallModel) return undefined
+  setScenePointer(event)
+  raycaster.setFromCamera(pointer, wallCamera)
+  const direction = wallDirection(activeWallModel.wall)
+  const normal = new THREE.Vector3(-direction[1] * activeWallSide, 0, direction[0] * activeWallSide)
+  const wallPoint = new THREE.Vector3(m(activeWallModel.wall.from[0]), 0, m(activeWallModel.wall.from[1]))
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, wallPoint)
+  const point = raycaster.ray.intersectPlane(plane, new THREE.Vector3())
+  if (!point) return undefined
+  const uIn = (point.x / INCH_TO_METER - activeWallModel.wall.from[0]) * direction[0]
+    + (point.z / INCH_TO_METER - activeWallModel.wall.from[1]) * direction[1]
+  return [uIn, point.y / INCH_TO_METER]
+}
+
+function wallDirection(wall: Wall): [number, number] {
+  const dx = wall.to[0] - wall.from[0]
+  const dz = wall.to[1] - wall.from[1]
+  const length = Math.hypot(dx, dz)
+  return [dx / length, dz / length]
+}
+
+function clampWallPlacement(model: FurnitureModel) {
+  const placement = model.placement
+  if (placement.surface !== 'wall') return
+  const wallModel = wallModels.find((candidate) => candidate.id === placement.wallId)
+  if (!wallModel) return
+  const lengthIn = Math.hypot(
+    wallModel.wall.to[0] - wallModel.wall.from[0],
+    wallModel.wall.to[1] - wallModel.wall.from[1],
+  )
+  const wallHeight = wallModel.wall.heightIn ?? wallHeightIn
+  placement.uIn = THREE.MathUtils.clamp(placement.uIn, model.definition.widthIn / 2, lengthIn - model.definition.widthIn / 2)
+  placement.elevationIn = THREE.MathUtils.clamp(placement.elevationIn, 0, wallHeight - model.definition.heightIn)
+}
+
 function doorModelAtPointer(event: PointerEvent) {
   setScenePointer(event)
   raycaster.setFromCamera(pointer, activeCamera)
@@ -1526,6 +1729,7 @@ function selectFurnitureModel(model: FurnitureModel | undefined) {
   selectedFurnitureModel = model
   selectedFurnitureControls.hidden = !model
   selectedFurnitureName.textContent = model?.definition.name ?? ''
+  rotateFurniture.hidden = model?.placement.surface === 'wall'
 
   if (furnitureSelectionBox) {
     scene.remove(furnitureSelectionBox)
@@ -1543,7 +1747,7 @@ function selectFurnitureModel(model: FurnitureModel | undefined) {
 }
 
 function rotateSelectedFurniture() {
-  if (!selectedFurnitureModel) return
+  if (!selectedFurnitureModel || selectedFurnitureModel.placement.surface === 'wall') return
   selectedFurnitureModel.placement.rotationDegrees = (selectedFurnitureModel.placement.rotationDegrees + 15) % 360
   selectedFurnitureModel.group.rotation.y = THREE.MathUtils.degToRad(selectedFurnitureModel.placement.rotationDegrees)
   furnitureSelectionBox?.update()
@@ -1604,6 +1808,14 @@ function handleFurnitureKeydown(event: KeyboardEvent) {
     updateFurnitureCatalogSelection()
     furnitureStatus.textContent = 'Placement cancelled. Choose an item to start.'
     canvas.style.cursor = ''
+  } else if (event.key === 'Escape' && selectingWall) {
+    selectingWall = false
+    selectWallButton.classList.remove('is-active')
+    selectWallButton.setAttribute('aria-pressed', 'false')
+    furnitureStatus.textContent = 'Wall selection cancelled.'
+    canvas.style.cursor = ''
+  } else if (event.key === 'Escape' && activeWallModel) {
+    exitWallElevation()
   } else if ((event.key === 'Delete' || event.key === 'Backspace') && selectedFurnitureModel) {
     event.preventDefault()
     deleteSelectedFurniture()
@@ -1644,13 +1856,117 @@ function restoreFurniturePlacements() {
 
 function isFurniturePlacement(value: unknown): value is FurniturePlacement {
   if (!value || typeof value !== 'object') return false
-  const placement = value as Partial<FurniturePlacement>
-  return typeof placement.id === 'string'
+  const placement = value as Record<string, unknown>
+  const hasIdentity = typeof placement.id === 'string'
     && typeof placement.furnitureId === 'string'
     && furnitureCatalog.some((item) => item.id === placement.furnitureId)
-    && Number.isFinite(placement.xIn)
+  if (!hasIdentity) return false
+  if (placement.surface === 'wall') {
+    return typeof placement.wallId === 'string'
+      && Number.isFinite(placement.uIn)
+      && Number.isFinite(placement.elevationIn)
+      && (placement.side === 1 || placement.side === -1)
+  }
+  return Number.isFinite(placement.xIn)
     && Number.isFinite(placement.zIn)
     && Number.isFinite(placement.rotationDegrees)
+    && (placement.elevationIn === undefined || Number.isFinite(placement.elevationIn))
+}
+
+function beginWallSelection() {
+  if (activeWallModel) exitWallElevation()
+  setViewMode('2d')
+  selectingWall = true
+  selectWallButton.classList.add('is-active')
+  selectWallButton.setAttribute('aria-pressed', 'true')
+  furnitureStatus.textContent = 'Click a wall in the floor plan to open its elevation.'
+  canvas.style.cursor = 'pointer'
+}
+
+function enterWallElevation(wallModel: WallModel) {
+  selectingWall = false
+  activeWallModel = wallModel
+  const direction = wallDirection(wallModel.wall)
+  const midpoint = [
+    (wallModel.wall.from[0] + wallModel.wall.to[0]) / 2,
+    (wallModel.wall.from[1] + wallModel.wall.to[1]) / 2,
+  ] as const
+  const baseNormal: [number, number] = [-direction[1], direction[0]]
+  const towardPlanCenter = (planCenter.xIn - midpoint[0]) * baseNormal[0] + (planCenter.zIn - midpoint[1]) * baseNormal[1]
+  activeWallSide = towardPlanCenter >= 0 ? 1 : -1
+  activeCamera = wallCamera
+  controls.enabled = false
+  flatVisibility.clear()
+  flatModel.children.forEach((child) => {
+    flatVisibility.set(child, child.visible)
+    child.visible = child === wallModel.group
+  })
+  updateWallFurnitureVisibility()
+  updateWallCamera()
+  selectWallButton.hidden = true
+  flipWallButton.hidden = false
+  exitWallButton.hidden = false
+  libraryInstructions.textContent = 'Select an asset, then click or drag it on this wall elevation.'
+  buildFurnitureLibrary('wall')
+  selectFurnitureModel(undefined)
+  furnitureStatus.textContent = 'Wall elevation opened. Choose a wall-mounted asset.'
+  canvas.style.cursor = ''
+}
+
+function flipActiveWallSide() {
+  if (!activeWallModel) return
+  activeWallSide = activeWallSide === 1 ? -1 : 1
+  updateWallFurnitureVisibility()
+  updateWallCamera()
+  selectFurnitureModel(undefined)
+}
+
+function updateWallFurnitureVisibility() {
+  furnitureModels.forEach((model) => {
+    model.group.visible = model.placement.surface === 'wall'
+      && model.placement.wallId === activeWallModel?.id
+      && model.placement.side === activeWallSide
+  })
+}
+
+function updateWallCamera() {
+  if (!activeWallModel) return
+  const wall = activeWallModel.wall
+  const direction = wallDirection(wall)
+  const normal: [number, number] = [-direction[1] * activeWallSide, direction[0] * activeWallSide]
+  const lengthIn = Math.hypot(wall.to[0] - wall.from[0], wall.to[1] - wall.from[1])
+  const heightIn = wall.heightIn ?? wallHeightIn
+  const midpointXIn = (wall.from[0] + wall.to[0]) / 2
+  const midpointZIn = (wall.from[1] + wall.to[1]) / 2
+  wallCamera.position.set(m(midpointXIn + normal[0] * 120), m(heightIn / 2), m(midpointZIn + normal[1] * 120))
+  wallCamera.up.set(0, 1, 0)
+  wallCamera.lookAt(m(midpointXIn), m(heightIn / 2), m(midpointZIn))
+  const aspect = canvas.clientWidth / canvas.clientHeight
+  const viewWidthIn = Math.max(lengthIn + 24, (heightIn + 24) * aspect)
+  const viewHeightIn = viewWidthIn / aspect
+  wallCamera.left = -m(viewWidthIn / 2)
+  wallCamera.right = m(viewWidthIn / 2)
+  wallCamera.top = m(viewHeightIn / 2)
+  wallCamera.bottom = -m(viewHeightIn / 2)
+  wallCamera.updateProjectionMatrix()
+}
+
+function exitWallElevation() {
+  activeFurnitureDefinitionId = undefined
+  activeWallModel = undefined
+  selectingWall = false
+  flatModel.children.forEach((child) => { child.visible = flatVisibility.get(child) ?? child.visible })
+  furnitureModels.forEach((model) => { model.group.visible = true })
+  selectWallButton.hidden = false
+  selectWallButton.classList.remove('is-active')
+  selectWallButton.setAttribute('aria-pressed', 'false')
+  flipWallButton.hidden = true
+  exitWallButton.hidden = true
+  libraryInstructions.textContent = 'Select an item, then click the 2D floor to place it.'
+  buildFurnitureLibrary('floor')
+  selectFurnitureModel(undefined)
+  setViewMode('2d')
+  furnitureStatus.textContent = 'Choose an item to start.'
 }
 
 function setOverlayVisibility(option: 'labels' | 'dimensions', visible: boolean) {
@@ -1664,6 +1980,10 @@ function setOverlayVisibility(option: 'labels' | 'dimensions', visible: boolean)
 }
 
 function setViewMode(view: '2d' | '3d') {
+  if (activeWallModel) {
+    exitWallElevation()
+    if (view === '2d') return
+  }
   const is3d = view === '3d'
   activeCamera = is3d ? camera3d : camera2d
   controls.enabled = is3d
@@ -1701,6 +2021,7 @@ function resize() {
   camera2d.top = halfHeight
   camera2d.bottom = -halfHeight
   camera2d.updateProjectionMatrix()
+  if (activeWallModel) updateWallCamera()
 }
 
 function m(inches: number) {

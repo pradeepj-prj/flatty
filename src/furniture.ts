@@ -11,25 +11,47 @@ export type FurnitureKind =
   | 'comfyCatalinaRockingChair'
   | 'castleryLainaChaiseSofa'
   | 'castleryHuggCoffeeTable'
+  | 'castleryHarperCoffeeTable'
+  | 'uoleviCoffeeTable'
   | 'hannahRoundTable'
   | 'ceasarStudyDesk'
+  | 'selbyDesk'
+  | 'kamdenDesk'
+  | 'kamdenDeskMirror'
   | 'wilfredoStorageSet'
+  | 'omarShelvingUnit'
+  | 'bestaTvBench'
+  | 'eketCabinet'
   | 'castlerySebDiningBench'
   | 'tymaLoungeChair'
+  | 'taobaoGreenChair'
+  | 'taobaoVelvetChair'
+  | 'totoroSofa'
+  | 'catClawChair'
+  | 'linnmonTable'
   | 'arecaPalmPlant'
   | 'monsteraPlant'
+  | 'deskMonitor'
   | 'jarnvagRug'
   | 'kivikChaiseSofa'
   | 'vimleChaiseSofa'
   | 'table'
   | 'chair'
   | 'beadTable'
+  | 'taobaoFoldingTable'
+  | 'renbergetChair'
+  | 'wallTv'
+  | 'wallArt'
+  | 'floatingConsole'
 
 export type FurnitureDefinition = {
   id: string
   name: string
   category: string
   kind: FurnitureKind
+  placementSurface?: 'floor' | 'wall'
+  // Stackable items land on whichever surface (floor or furniture top) is under the pointer.
+  stackable?: boolean
   widthIn: number
   depthIn: number
   heightIn: number
@@ -41,17 +63,80 @@ export type FurnitureDefinition = {
   }
 }
 
-export type FurniturePlacement = {
+export type FloorFurniturePlacement = {
   id: string
   furnitureId: string
+  surface?: 'floor'
   xIn: number
   zIn: number
+  // Height of the supporting surface (0 for the floor, a furniture top otherwise).
+  elevationIn?: number
   rotationDegrees: number
 }
+
+export type WallFurniturePlacement = {
+  id: string
+  furnitureId: string
+  surface: 'wall'
+  wallId: string
+  uIn: number
+  elevationIn: number
+  side: 1 | -1
+}
+
+export type FurniturePlacement = FloorFurniturePlacement | WallFurniturePlacement
 
 type InchesToMeters = (inches: number) => number
 
 export const furnitureCatalog: FurnitureDefinition[] = [
+  {
+    id: '55-inch-wall-tv',
+    name: '55-inch Wall TV',
+    category: 'Wall-mounted',
+    kind: 'wallTv',
+    placementSurface: 'wall',
+    widthIn: 48.5,
+    depthIn: 2.2,
+    heightIn: 28,
+    cost: 0,
+    colors: { primary: '#111827', secondary: '#020617', accent: '#334155' },
+  },
+  {
+    id: '65-inch-wall-tv',
+    name: '65-inch Wall TV',
+    category: 'Wall-mounted',
+    kind: 'wallTv',
+    placementSurface: 'wall',
+    widthIn: 57.5,
+    depthIn: 2.4,
+    heightIn: 33,
+    cost: 0,
+    colors: { primary: '#111827', secondary: '#020617', accent: '#334155' },
+  },
+  {
+    id: 'framed-wall-art',
+    name: 'Framed Wall Art',
+    category: 'Wall-mounted',
+    kind: 'wallArt',
+    placementSurface: 'wall',
+    widthIn: 30,
+    depthIn: 1.5,
+    heightIn: 40,
+    cost: 0,
+    colors: { primary: '#d8a45d', secondary: '#5b3924', accent: '#52796f' },
+  },
+  {
+    id: 'floating-tv-console',
+    name: 'Floating TV Console',
+    category: 'Wall-mounted',
+    kind: 'floatingConsole',
+    placementSurface: 'wall',
+    widthIn: 60,
+    depthIn: 14,
+    heightIn: 12,
+    cost: 0,
+    colors: { primary: '#9a6845', secondary: '#33251d', accent: '#d8b98b' },
+  },
   {
     id: 'queen-bed',
     name: 'Queen Bed',
@@ -159,6 +244,30 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#a56533', secondary: '#efe8dc', accent: '#75451f' },
   },
   {
+    // Reference: Castlery Harper lift-top coffee table, oval fluted body, 122 x 62 x 39 cm, top 2.2 cm.
+    id: 'castlery-harper-lift-top-coffee-table',
+    name: 'Castlery Harper Coffee Table',
+    category: 'Tables',
+    kind: 'castleryHarperCoffeeTable',
+    widthIn: 48,
+    depthIn: 24.4,
+    heightIn: 15.4,
+    cost: 999,
+    colors: { primary: '#a5673a', secondary: '#834f2b', accent: '#c98a54' },
+  },
+  {
+    // Reference: 42 Uolevi lift-top coffee table, wood storage box on square-tube metal frame, 100 x 55 x 40 cm.
+    id: 'fortytwo-uolevi-coffee-table',
+    name: '42 Uolevi Coffee Table',
+    category: 'Tables',
+    kind: 'uoleviCoffeeTable',
+    widthIn: 39.4,
+    depthIn: 21.7,
+    heightIn: 15.75,
+    cost: 99,
+    colors: { primary: '#d9bd8b', secondary: '#ededec', accent: '#b7955f' },
+  },
+  {
     // Reference: 42 Hannah round side table, 45 cm diameter x 45 cm high.
     id: 'fortytwo-hannah-round-side-table',
     name: '42 Hannah Round Table',
@@ -169,6 +278,54 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     heightIn: 17.7,
     cost: 149,
     colors: { primary: '#d9bd8d', secondary: '#b7894b', accent: '#8d6235' },
+  },
+  {
+    // Reference: IKEA LINNMON/ADILS table, white, thin top on tapered legs, 100 x 60 x 74 cm.
+    id: 'ikea-linnmon-adils-table-white',
+    name: 'LINNMON/ADILS Table',
+    category: 'Study Desks',
+    kind: 'linnmonTable',
+    widthIn: 39.4,
+    depthIn: 23.6,
+    heightIn: 29.1,
+    cost: 45,
+    colors: { primary: '#f2f2f0', secondary: '#e4e4e2', accent: '#cfcfcd' },
+  },
+  {
+    // Reference: 42 Kamden L-shaped corner desk, walnut top with curved inner corner, splayed black legs, 140 x 100 x 75 cm.
+    id: 'fortytwo-kamden-l-desk',
+    name: '42 Kamden L-Desk',
+    category: 'Study Desks',
+    kind: 'kamdenDesk',
+    widthIn: 55.1,
+    depthIn: 39.4,
+    heightIn: 29.5,
+    cost: 299,
+    colors: { primary: '#8f5d38', secondary: '#1e1e1e', accent: '#6d4526' },
+  },
+  {
+    // Mirror of the 42 Kamden: deep work surface on the left, wing on the right, for the opposite corner.
+    id: 'fortytwo-kamden-l-desk-mirror',
+    name: '42 Kamden L-Desk (Mirror)',
+    category: 'Study Desks',
+    kind: 'kamdenDeskMirror',
+    widthIn: 55.1,
+    depthIn: 39.4,
+    heightIn: 29.5,
+    cost: 299,
+    colors: { primary: '#8f5d38', secondary: '#1e1e1e', accent: '#6d4526' },
+  },
+  {
+    // Reference: 42 Selby work/study desk, concrete-grey top, black metal frame, side shelf storage, 120 x 80 x 77 cm.
+    id: 'fortytwo-selby-desk',
+    name: '42 Selby Desk',
+    category: 'Study Desks',
+    kind: 'selbyDesk',
+    widthIn: 47.2,
+    depthIn: 31.5,
+    heightIn: 30.3,
+    cost: 236.5,
+    colors: { primary: '#bcb7af', secondary: '#1a1a1a', accent: '#9a958d' },
   },
   {
     // Reference: Caesar work desk, 120 x 60 x 76 cm.
@@ -195,6 +352,44 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#d7b274', secondary: '#f2e8d6', accent: '#8a552b' },
   },
   {
+    // Reference: IKEA EKET single wall-mounted cabinet (open cube), brown walnut effect, 35 x 35 x 35 cm. Place several to build a combination.
+    id: 'ikea-eket-cabinet-walnut',
+    name: 'EKET Cabinet',
+    category: 'Wall-mounted',
+    kind: 'eketCabinet',
+    placementSurface: 'wall',
+    widthIn: 13.8,
+    depthIn: 13.8,
+    heightIn: 13.8,
+    cost: 30,
+    colors: { primary: '#7a5334', secondary: '#5c3d24', accent: '#96693f' },
+  },
+  {
+    // Reference: IKEA BESTA TV bench with doors, black-brown carcass, Lappviken walnut-effect doors, 180 x 42 x 38 cm.
+    id: 'ikea-besta-tv-bench-doors',
+    name: 'BESTA TV Bench',
+    category: 'Wall-mounted',
+    kind: 'bestaTvBench',
+    placementSurface: 'wall',
+    widthIn: 70.9,
+    depthIn: 16.5,
+    heightIn: 15,
+    cost: 185,
+    colors: { primary: '#6e4a2f', secondary: '#2a221f', accent: '#8a6242' },
+  },
+  {
+    // Reference: IKEA OMAR shelving unit, galvanised, 3 open metal shelves, 92 x 36 x 94 cm.
+    id: 'ikea-omar-shelving-unit-galvanised',
+    name: 'OMAR Shelving Unit',
+    category: 'Storage',
+    kind: 'omarShelvingUnit',
+    widthIn: 36.2,
+    depthIn: 14.2,
+    heightIn: 37,
+    cost: 45,
+    colors: { primary: '#b8bcc0', secondary: '#8f959b', accent: '#d4d7da' },
+  },
+  {
     // Reference: Castlery Seb dining bench, 160 x 38 x 45 cm.
     id: 'castlery-seb-dining-bench-160',
     name: 'Castlery Seb Dining Bench',
@@ -219,11 +414,61 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#c9bcaa', secondary: '#9b8d7b', accent: '#eee7dc' },
   },
   {
+    // Reference: Taobao T31 retro green corduroy tub armchair, gourd wood legs, 92 x 83 x 75 cm.
+    id: 'taobao-t31-green-corduroy-chair',
+    name: 'T31 Retro Green Armchair',
+    category: 'Lounge Chairs',
+    kind: 'taobaoGreenChair',
+    widthIn: 36.2,
+    depthIn: 32.7,
+    heightIn: 29.5,
+    cost: 0,
+    colors: { primary: '#4f5d2c', secondary: '#3a451f', accent: '#2b1c12' },
+  },
+  {
+    // Reference: Taobao frosted velvet-green leisure sofa chair, chunky tubular form, 76 x 72 x 71 cm.
+    id: 'taobao-frosted-velvet-green-chair',
+    name: 'Frosted Velvet Sofa Chair',
+    category: 'Lounge Chairs',
+    kind: 'taobaoVelvetChair',
+    widthIn: 29.9,
+    depthIn: 28.3,
+    heightIn: 28,
+    cost: 0,
+    colors: { primary: '#5b6b40', secondary: '#495732', accent: '#6f8050' },
+  },
+  {
+    // Reference: Taobao Totoro sofa, sakura pink chenille, rotatable 1-seater, 93 x 80 x 83 cm.
+    id: 'taobao-totoro-sofa-pink',
+    name: 'Totoro Sofa (Pink)',
+    category: 'Lounge Chairs',
+    kind: 'totoroSofa',
+    widthIn: 36.6,
+    depthIn: 31.5,
+    heightIn: 32.7,
+    cost: 0,
+    colors: { primary: '#c67d76', secondary: '#b3665f', accent: '#d69a93' },
+  },
+  {
+    // Reference: generic 27-inch desktop monitor on a pedestal stand.
+    id: 'desktop-monitor-27',
+    name: '27" Monitor',
+    category: 'Electronics',
+    kind: 'deskMonitor',
+    stackable: true,
+    widthIn: 24,
+    depthIn: 7.5,
+    heightIn: 16.5,
+    cost: 0,
+    colors: { primary: '#20242a', secondary: '#0a0c0f', accent: '#3a3f45' },
+  },
+  {
     // Reference: CHRYSALIDOCARPUS LUTESCENS potted plant / areca palm, 24 cm pot, 100 cm high.
     id: 'chrysalidocarpus-areca-palm-24cm',
     name: 'CHRYSALIDOCARPUS Areca Palm',
     category: 'Plants',
     kind: 'arecaPalmPlant',
+    stackable: true,
     widthIn: 34,
     depthIn: 34,
     heightIn: 39.4,
@@ -236,6 +481,7 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     name: 'MONSTERA DELICIOSA Plant',
     category: 'Plants',
     kind: 'monsteraPlant',
+    stackable: true,
     widthIn: 18,
     depthIn: 16,
     heightIn: 18,
@@ -279,6 +525,18 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#8e928e', secondary: '#6f756f', accent: '#bec2bc' },
   },
   {
+    // Reference: Taobao walnut folding drop-leaf dining table, folded state 80 x 38.6 x 75 cm.
+    id: 'taobao-folding-dining-table',
+    name: 'Folding Dining Table',
+    category: 'Tables',
+    kind: 'taobaoFoldingTable',
+    widthIn: 31.5,
+    depthIn: 15.2,
+    heightIn: 29.5,
+    cost: 0,
+    colors: { primary: '#7a4f31', secondary: '#573621', accent: '#9a6a45' },
+  },
+  {
     id: 'dining-table-140',
     name: 'Dining Table',
     category: 'Tables',
@@ -312,6 +570,30 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     cost: 0,
     colors: { primary: '#9a6845', secondary: '#d8c5ad' },
   },
+  {
+    // Reference: Huangxin ebony + dark green cat-claw leather dining chair, cane back, 45 x 46 x 80 cm.
+    id: 'huangxin-cat-claw-dining-chair',
+    name: 'Cat Claw Dining Chair',
+    category: 'Chairs',
+    kind: 'catClawChair',
+    widthIn: 17.7,
+    depthIn: 18.1,
+    heightIn: 31.5,
+    cost: 0,
+    colors: { primary: '#46592c', secondary: '#1b1b1b', accent: '#c9a86a' },
+  },
+  {
+    // Reference: IKEA RENBERGET swivel office chair, Bomstad black, 5-star base, 67 x 67 x ~105 cm.
+    id: 'ikea-renberget-swivel-chair',
+    name: 'RENBERGET Office Chair',
+    category: 'Office Chairs',
+    kind: 'renbergetChair',
+    widthIn: 26.4,
+    depthIn: 26.4,
+    heightIn: 41.3,
+    cost: 99,
+    colors: { primary: '#1e1e20', secondary: '#101012', accent: '#33333a' },
+  },
 ]
 
 export function createFurnitureModel(definition: FurnitureDefinition, m: InchesToMeters) {
@@ -327,19 +609,38 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   if (definition.kind === 'comfyCatalinaRockingChair') buildComfyCatalinaRockingChair(group, definition, m)
   if (definition.kind === 'castleryLainaChaiseSofa') buildCastleryLainaChaiseSofa(group, definition, m)
   if (definition.kind === 'castleryHuggCoffeeTable') buildCastleryHuggCoffeeTable(group, definition, m)
+  if (definition.kind === 'castleryHarperCoffeeTable') buildCastleryHarperCoffeeTable(group, definition, m)
+  if (definition.kind === 'uoleviCoffeeTable') buildUoleviCoffeeTable(group, definition, m)
   if (definition.kind === 'hannahRoundTable') buildHannahRoundTable(group, definition, m)
   if (definition.kind === 'ceasarStudyDesk') buildCeasarStudyDesk(group, definition, m)
+  if (definition.kind === 'selbyDesk') buildSelbyDesk(group, definition, m)
+  if (definition.kind === 'kamdenDesk') buildKamdenDesk(group, definition, m, 1)
+  if (definition.kind === 'kamdenDeskMirror') buildKamdenDesk(group, definition, m, -1)
   if (definition.kind === 'wilfredoStorageSet') buildWilfredoStorageSet(group, definition, m)
+  if (definition.kind === 'omarShelvingUnit') buildOmarShelvingUnit(group, definition, m)
+  if (definition.kind === 'bestaTvBench') buildBestaTvBench(group, definition, m)
+  if (definition.kind === 'eketCabinet') buildEketCabinet(group, definition, m)
   if (definition.kind === 'castlerySebDiningBench') buildCastlerySebDiningBench(group, definition, m)
   if (definition.kind === 'tymaLoungeChair') buildTymaLoungeChair(group, definition, m)
+  if (definition.kind === 'taobaoGreenChair') buildTaobaoGreenChair(group, definition, m)
+  if (definition.kind === 'taobaoVelvetChair') buildTaobaoVelvetChair(group, definition, m)
+  if (definition.kind === 'totoroSofa') buildTotoroSofa(group, definition, m)
+  if (definition.kind === 'catClawChair') buildCatClawChair(group, definition, m)
+  if (definition.kind === 'renbergetChair') buildRenbergetChair(group, definition, m)
+  if (definition.kind === 'linnmonTable') buildLinnmonTable(group, definition, m)
   if (definition.kind === 'arecaPalmPlant') buildArecaPalmPlant(group, definition, m)
   if (definition.kind === 'monsteraPlant') buildMonsteraPlant(group, definition, m)
+  if (definition.kind === 'deskMonitor') buildDeskMonitor(group, definition, m)
   if (definition.kind === 'jarnvagRug') buildJarnvagRug(group, definition, m)
   if (definition.kind === 'kivikChaiseSofa') buildKivikChaiseSofa(group, definition, m)
   if (definition.kind === 'vimleChaiseSofa') buildVimleChaiseSofa(group, definition, m)
   if (definition.kind === 'table') buildTable(group, definition, m)
   if (definition.kind === 'beadTable') buildBeadTable(group, definition, m)
+  if (definition.kind === 'taobaoFoldingTable') buildTaobaoFoldingTable(group, definition, m)
   if (definition.kind === 'chair') buildChair(group, definition, m)
+  if (definition.kind === 'wallTv') buildWallTv(group, definition, m)
+  if (definition.kind === 'wallArt') buildWallArt(group, definition, m)
+  if (definition.kind === 'floatingConsole') buildFloatingConsole(group, definition, m)
 
   group.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return
@@ -611,6 +912,93 @@ function buildCastleryHuggCoffeeTable(group: THREE.Group, item: FurnitureDefinit
   }
 }
 
+function buildUoleviCoffeeTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const woodColor = item.colors.primary
+  const metalColor = item.colors.secondary ?? '#ededec'
+  const grainColor = item.colors.accent ?? woodColor
+  const boxHeightIn = 13.5 / 2.54
+  const boxTopIn = item.heightIn
+  const boxBottomIn = boxTopIn - boxHeightIn
+  const tubeIn = 1
+  const frameInsetIn = 3
+  const legXIn = item.widthIn / 2 - frameInsetIn
+  const legZIn = item.depthIn / 2 - frameInsetIn
+
+  // Wood lift-top storage box.
+  addRoundedBox(group, item.widthIn, boxHeightIn, item.depthIn, 0, boxBottomIn + boxHeightIn / 2, 0, woodColor, 0.6, m)
+  addBox(group, item.widthIn - 4, 0.06, item.depthIn - 4, 0, boxTopIn - boxHeightIn + 0.03, 0, grainColor, m)
+  for (let index = -4; index <= 4; index += 1) {
+    addBox(group, item.widthIn - 3, 0.05, 0.08, 0, boxTopIn + 0.02, index * 2.1, grainColor, m)
+  }
+
+  // Slim square-tube metal frame: legs plus top and bottom perimeter rails.
+  for (const xIn of [-legXIn, legXIn]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      addBox(group, tubeIn, boxBottomIn, tubeIn, xIn, boxBottomIn / 2, zIn, metalColor, m)
+    }
+  }
+  for (const yIn of [boxBottomIn - tubeIn / 2, tubeIn / 2]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      addBox(group, legXIn * 2 + tubeIn, tubeIn, tubeIn, 0, yIn, zIn, metalColor, m)
+    }
+    for (const xIn of [-legXIn, legXIn]) {
+      addBox(group, tubeIn, tubeIn, legZIn * 2 + tubeIn, xIn, yIn, 0, metalColor, m)
+    }
+  }
+}
+
+function buildCastleryHarperCoffeeTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const woodColor = item.colors.primary
+  const bodyColor = item.colors.secondary ?? woodColor
+  const fluteColor = item.colors.accent ?? woodColor
+  const topThicknessIn = 2.2 / 2.54
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const baseHeightIn = 1.6
+  const bodyBottomIn = baseHeightIn
+  const bodyTopIn = item.heightIn - topThicknessIn
+  const bodyHeightIn = bodyTopIn - bodyBottomIn
+  const bodyCenterYIn = bodyBottomIn + bodyHeightIn / 2
+
+  // Oval lift-top and the drum-shaped body just beneath it.
+  addStadiumTop(group, item.widthIn, item.depthIn, topThicknessIn, 0, topYIn, 0, woodColor, m)
+  addStadiumTop(group, item.widthIn - 2, item.depthIn - 2, bodyHeightIn, 0, bodyCenterYIn, 0, bodyColor, m)
+
+  // Recessed base plinth so the body appears to float slightly.
+  addStadiumTop(group, item.widthIn - 8, item.depthIn - 8, baseHeightIn, 0, baseHeightIn / 2, 0, bodyColor, m)
+
+  // Vertical fluting wrapped around the oval body perimeter.
+  const bodyWidthIn = item.widthIn - 2
+  const bodyDepthIn = item.depthIn - 2
+  const capRadiusIn = bodyDepthIn / 2
+  const straightLengthIn = Math.max(0.01, bodyWidthIn - bodyDepthIn)
+  const fluteRadiusIn = 0.4
+  const fluteHeightIn = bodyHeightIn - 0.6
+  const straightFlutes = Math.max(2, Math.round(straightLengthIn / 1.6))
+  for (let index = 0; index <= straightFlutes; index += 1) {
+    const xIn = -straightLengthIn / 2 + (index / straightFlutes) * straightLengthIn
+    for (const zIn of [-capRadiusIn, capRadiusIn]) {
+      addCylinder(group, fluteRadiusIn, fluteHeightIn, xIn, bodyCenterYIn, zIn, fluteColor, m)
+    }
+  }
+  const capFlutes = 7
+  for (const capXIn of [-straightLengthIn / 2, straightLengthIn / 2]) {
+    const facing = capXIn < 0 ? Math.PI : 0
+    for (let index = 1; index < capFlutes; index += 1) {
+      const angle = facing - Math.PI / 2 + (index / capFlutes) * Math.PI
+      addCylinder(
+        group,
+        fluteRadiusIn,
+        fluteHeightIn,
+        capXIn + Math.sin(angle) * (capXIn < 0 ? -capRadiusIn : capRadiusIn),
+        bodyCenterYIn,
+        Math.cos(angle) * capRadiusIn,
+        fluteColor,
+        m,
+      )
+    }
+  }
+}
+
 function buildArecaPalmPlant(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const potColor = item.colors.secondary ?? '#b96536'
   const leafColor = item.colors.primary
@@ -668,6 +1056,21 @@ function buildArecaPalmPlant(group: THREE.Group, item: FurnitureDefinition, m: I
   }
 }
 
+function buildDeskMonitor(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const bodyColor = item.colors.primary
+  const screenColor = item.colors.secondary ?? '#0a0c0f'
+  const standColor = item.colors.accent ?? bodyColor
+  const baseHeightIn = 0.7
+  const screenBottomIn = 3.5
+  const screenHeightIn = item.heightIn - screenBottomIn
+  const screenCenterYIn = screenBottomIn + screenHeightIn / 2
+
+  addRoundedBox(group, 10, baseHeightIn, item.depthIn, 0, baseHeightIn / 2, 1, standColor, 0.6, m)
+  addBox(group, 1.8, screenBottomIn - baseHeightIn + 2, 1.4, 0, (screenBottomIn + baseHeightIn) / 2, 0, standColor, m)
+  addRoundedBox(group, item.widthIn, screenHeightIn, 1.4, 0, screenCenterYIn, 0, bodyColor, 0.5, m)
+  addBox(group, item.widthIn - 2, screenHeightIn - 2, 0.2, 0, screenCenterYIn, 0.8, screenColor, m)
+}
+
 function buildMonsteraPlant(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const potColor = item.colors.secondary ?? '#b96536'
   const leafColor = item.colors.primary
@@ -703,6 +1106,120 @@ function buildMonsteraPlant(group: THREE.Group, item: FurnitureDefinition, m: In
       [rotationX, rotationY, rotationZ],
     )
   })
+}
+
+function buildKamdenDesk(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters, mirror: 1 | -1) {
+  const topColor = item.colors.primary
+  const legColor = item.colors.secondary ?? '#1e1e1e'
+  const footColor = '#d8d8d8'
+  const thicknessIn = 1.2
+  const widthIn = item.widthIn
+  const depthIn = item.depthIn
+
+  // Walnut L top with a concave curved inner corner: a deep right work surface
+  // and a shallower left wing along the back. The outline is sampled as points so
+  // the mirror can negate X and reverse order, keeping the face winding correct.
+  const zWingFrontIn = -depthIn / 2 + depthIn * 0.58
+  const xJointIn = widthIn * 0.06
+  const xWingEndIn = xJointIn - 10
+  const outline: Array<[number, number]> = [
+    [-widthIn / 2, -depthIn / 2],
+    [widthIn / 2, -depthIn / 2],
+    [widthIn / 2, depthIn / 2],
+    [xJointIn, depthIn / 2],
+  ]
+  const curveSamples = 10
+  for (let step = 1; step <= curveSamples; step += 1) {
+    const t = step / curveSamples
+    const inv = 1 - t
+    const x = inv * inv * xJointIn + 2 * inv * t * xJointIn + t * t * xWingEndIn
+    const z = inv * inv * depthIn / 2 + 2 * inv * t * zWingFrontIn + t * t * zWingFrontIn
+    outline.push([x, z])
+  }
+  outline.push([-widthIn / 2, zWingFrontIn])
+
+  const points = mirror === -1
+    ? outline.map(([x, z]): [number, number] => [-x, z]).reverse()
+    : outline
+  const shape = new THREE.Shape()
+  points.forEach(([x, z], index) => {
+    if (index === 0) shape.moveTo(m(x), m(z))
+    else shape.lineTo(m(x), m(z))
+  })
+  shape.closePath()
+  const topGeometry = new THREE.ExtrudeGeometry(shape, { depth: m(thicknessIn), bevelEnabled: false })
+  topGeometry.rotateX(Math.PI / 2)
+  const top = new THREE.Mesh(topGeometry, furnitureMaterial(topColor))
+  top.position.y = m(item.heightIn)
+  group.add(top)
+
+  // Thin splayed black tapered legs, every one tucked under the top.
+  const legTopIn = item.heightIn - thicknessIn
+  const legs: Array<[number, number]> = [
+    [-widthIn / 2 + 3, -depthIn / 2 + 3],
+    [widthIn / 2 - 3, -depthIn / 2 + 3],
+    [widthIn / 2 - 3, depthIn / 2 - 3],
+    [-widthIn * 0.25, zWingFrontIn - 3],
+  ]
+  for (const [baseXIn, legZIn] of legs) {
+    const legXIn = baseXIn * mirror
+    const footXIn = legXIn + Math.sign(legXIn || 1) * 2.5
+    const footZIn = legZIn + Math.sign(legZIn || 1) * 2.5
+    addCylinderBetween(group, [legXIn, legTopIn, legZIn], [footXIn, 0.4, footZIn], 0.42, legColor, m)
+    addCylinder(group, 0.45, 0.3, footXIn, 0.15, footZIn, footColor, m)
+  }
+}
+
+function buildSelbyDesk(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const topColor = item.colors.primary
+  const frameColor = item.colors.secondary ?? '#1a1a1a'
+  const shelfColor = item.colors.accent ?? topColor
+  const topThicknessIn = 1.2
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const postHeightIn = item.heightIn - topThicknessIn
+  const tubeIn = 0.9
+  const shelfWidthIn = 18
+  const xTowerOuterIn = -item.widthIn / 2 + 1
+  const xTowerInnerIn = xTowerOuterIn + shelfWidthIn
+  const notchWidthIn = 11
+  const notchDepthIn = 12
+  const xNotchRightIn = xTowerInnerIn + notchWidthIn
+  const xRightIn = item.widthIn / 2 - 1
+  const zFrontIn = item.depthIn / 2 - 1
+  const zBackIn = -zFrontIn
+
+  // Concrete-grey top: full-depth left (over the shelf tower) and right work
+  // surfaces joined by a back band, with a rectangular notch cut into the
+  // front centre. Every leg stays under the top — nothing overhangs the edge.
+  const leftBlockWidthIn = xTowerInnerIn + item.widthIn / 2
+  addRoundedBox(group, leftBlockWidthIn, topThicknessIn, item.depthIn, -item.widthIn / 2 + leftBlockWidthIn / 2, topYIn, 0, topColor, 0.2, m)
+  const rightBlockWidthIn = item.widthIn / 2 - xNotchRightIn
+  addRoundedBox(group, rightBlockWidthIn, topThicknessIn, item.depthIn, xNotchRightIn + rightBlockWidthIn / 2, topYIn, 0, topColor, 0.2, m)
+  const notchBackDepthIn = item.depthIn - notchDepthIn
+  addRoundedBox(group, notchWidthIn, topThicknessIn, notchBackDepthIn, (xTowerInnerIn + xNotchRightIn) / 2, topYIn, -item.depthIn / 2 + notchBackDepthIn / 2, topColor, 0.2, m)
+
+  // Black metal posts, all tucked under the top on adjustable feet.
+  for (const xIn of [xTowerOuterIn, xTowerInnerIn, xNotchRightIn, xRightIn]) {
+    for (const zIn of [zFrontIn, zBackIn]) {
+      addBox(group, tubeIn, postHeightIn, tubeIn, xIn, postHeightIn / 2, zIn, frameColor, m)
+      addCylinder(group, 0.4, 0.4, xIn, 0.2, zIn, frameColor, m)
+    }
+  }
+
+  // Two concrete shelves in the left storage tower.
+  const shelfCenterXIn = (xTowerOuterIn + xTowerInnerIn) / 2
+  for (const shelfYIn of [6, 15]) {
+    addRoundedBox(group, shelfWidthIn - 1, 1, item.depthIn - 2, shelfCenterXIn, shelfYIn, 0, shelfColor, 0.2, m)
+  }
+
+  // X cross-braces on the tower faces and across the right work-surface span.
+  const braceTopIn = postHeightIn - 2
+  for (const xIn of [xTowerOuterIn, xTowerInnerIn]) {
+    addCylinderBetween(group, [xIn, 2, zBackIn], [xIn, braceTopIn, zFrontIn], 0.18, frameColor, m)
+    addCylinderBetween(group, [xIn, 2, zFrontIn], [xIn, braceTopIn, zBackIn], 0.18, frameColor, m)
+  }
+  addCylinderBetween(group, [xNotchRightIn, 2, zBackIn], [xRightIn, braceTopIn, zBackIn], 0.18, frameColor, m)
+  addCylinderBetween(group, [xRightIn, 2, zBackIn], [xNotchRightIn, braceTopIn, zBackIn], 0.18, frameColor, m)
 }
 
 function buildCeasarStudyDesk(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
@@ -796,6 +1313,81 @@ function buildWilfredoStorageSet(group: THREE.Group, item: FurnitureDefinition, 
   }
 }
 
+function buildEketCabinet(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const woodColor = item.colors.primary
+  const interiorColor = item.colors.secondary ?? woodColor
+  const panelIn = 0.6
+  const widthIn = item.widthIn
+  const heightIn = item.heightIn
+  const depthIn = item.depthIn
+
+  // Single open EKET cube: back panel plus top/bottom/side walls, front left open.
+  addBox(group, widthIn, heightIn, panelIn, 0, heightIn / 2, -depthIn / 2 + panelIn / 2, interiorColor, m)
+  addBox(group, widthIn, panelIn, depthIn, 0, panelIn / 2, 0, woodColor, m)
+  addBox(group, widthIn, panelIn, depthIn, 0, heightIn - panelIn / 2, 0, woodColor, m)
+  addBox(group, panelIn, heightIn, depthIn, -widthIn / 2 + panelIn / 2, heightIn / 2, 0, woodColor, m)
+  addBox(group, panelIn, heightIn, depthIn, widthIn / 2 - panelIn / 2, heightIn / 2, 0, woodColor, m)
+}
+
+function buildBestaTvBench(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const doorColor = item.colors.primary
+  const carcassColor = item.colors.secondary ?? '#2a221f'
+  const grainColor = item.colors.accent ?? doorColor
+  const frontZIn = item.depthIn / 2
+
+  // Black-brown carcass with a top panel the TV can sit on.
+  addBox(group, item.widthIn, item.heightIn, item.depthIn, 0, item.heightIn / 2, 0, carcassColor, m)
+  addBox(group, item.widthIn, 0.8, item.depthIn + 0.2, 0, item.heightIn - 0.4, 0, carcassColor, m)
+
+  // Three handle-less Lappviken walnut-effect doors with thin frame reveals.
+  const doorCount = 3
+  const gapIn = 0.4
+  const doorWidthIn = (item.widthIn - gapIn * (doorCount + 1)) / doorCount
+  const doorHeightIn = item.heightIn - 2
+  for (let index = 0; index < doorCount; index += 1) {
+    const xIn = -item.widthIn / 2 + gapIn + doorWidthIn / 2 + index * (doorWidthIn + gapIn)
+    addRoundedBox(group, doorWidthIn, doorHeightIn, 0.7, xIn, item.heightIn / 2, frontZIn + 0.15, doorColor, 0.25, m)
+    for (let line = -2; line <= 2; line += 1) {
+      addBox(group, doorWidthIn - 1.5, 0.05, 0.08, xIn, item.heightIn / 2 + line * 2.4, frontZIn + 0.55, grainColor, m)
+    }
+  }
+}
+
+function buildOmarShelvingUnit(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const metalColor = item.colors.primary
+  const postColor = item.colors.secondary ?? metalColor
+  const wireColor = item.colors.accent ?? metalColor
+  const postRadiusIn = 0.5
+  const footHeightIn = 1.5
+  const postXIn = item.widthIn / 2 - postRadiusIn
+  const postZIn = item.depthIn / 2 - postRadiusIn
+  const shelfYsIn = [footHeightIn + 1.5, item.heightIn / 2, item.heightIn - 1]
+  const frameIn = 0.5
+  const wireCount = 7
+
+  // Four galvanised corner posts on adjustable feet.
+  for (const xIn of [-postXIn, postXIn]) {
+    for (const zIn of [-postZIn, postZIn]) {
+      addCylinder(group, postRadiusIn, item.heightIn - footHeightIn, xIn, footHeightIn + (item.heightIn - footHeightIn) / 2, zIn, postColor, m)
+      addCylinder(group, postRadiusIn * 0.7, footHeightIn, xIn, footHeightIn / 2, zIn, '#2b2f33', m)
+    }
+  }
+
+  // Three open wire shelves: perimeter frame plus longitudinal wires.
+  for (const shelfYIn of shelfYsIn) {
+    for (const zIn of [-postZIn, postZIn]) {
+      addBox(group, item.widthIn - 1, frameIn, frameIn, 0, shelfYIn, zIn, metalColor, m)
+    }
+    for (const xIn of [-postXIn, postXIn]) {
+      addBox(group, frameIn, frameIn, item.depthIn - 1, xIn, shelfYIn, 0, metalColor, m)
+    }
+    for (let index = 0; index < wireCount; index += 1) {
+      const zIn = -postZIn + frameIn + (index / (wireCount - 1)) * (item.depthIn - 2 * postRadiusIn - 2 * frameIn)
+      addBox(group, item.widthIn - 2, 0.25, 0.25, 0, shelfYIn + 0.1, zIn, wireColor, m)
+    }
+  }
+}
+
 function buildCastlerySebDiningBench(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const woodColor = item.colors.primary
   const cushionColor = item.colors.secondary ?? '#3d4142'
@@ -857,6 +1449,246 @@ function buildTymaLoungeChair(group: THREE.Group, item: FurnitureDefinition, m: 
     addSphere(group, 0.85, xIn, seatHeightIn + 0.8, 4.5, seamColor, m)
     addRoundedBox(group, 5, 1.1, 2.2, xIn, item.heightIn - 2.5, backCenterZIn - 1.8, highlightColor, 1, m, -0.45)
   }
+}
+
+function buildTaobaoGreenChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const fabricColor = item.colors.primary
+  const shellColor = item.colors.secondary ?? fabricColor
+  const legColor = item.colors.accent ?? '#2b1c12'
+  const legHeightIn = 6
+  const seatTopIn = legHeightIn + 8.5
+  const bodyHeightIn = seatTopIn - legHeightIn
+
+  // Plush rounded body and seat cushion.
+  addRoundedBox(group, item.widthIn - 2, bodyHeightIn, item.depthIn - 4, 0, legHeightIn + bodyHeightIn / 2, 1, shellColor, 5, m)
+  addRoundedBox(group, item.widthIn - 8, 5.5, item.depthIn - 12, 0, seatTopIn + 1, 3, fabricColor, 4.5, m, -0.05)
+
+  // Curved wraparound back that tapers from a tall back down to the front arms.
+  const rimRadiusXIn = item.widthIn / 2 - 3
+  const rimRadiusZIn = item.depthIn / 2 - 4
+  const angleMaxRad = (135 * Math.PI) / 180
+  const backRiseIn = item.heightIn - seatTopIn
+  const armRiseIn = backRiseIn * 0.55
+  const rimSegments = 16
+  for (let index = 0; index <= rimSegments; index += 1) {
+    const angle = -angleMaxRad + (index / rimSegments) * angleMaxRad * 2
+    const towardFront = Math.abs(angle) / angleMaxRad
+    const riseIn = backRiseIn + (armRiseIn - backRiseIn) * towardFront
+    const xIn = Math.sin(angle) * rimRadiusXIn
+    const zIn = -Math.cos(angle) * rimRadiusZIn
+    const segmentWidthIn = (angleMaxRad * 2 * rimRadiusXIn) / rimSegments + 2
+    addRoundedBox(group, segmentWidthIn, riseIn, 4.5, xIn, seatTopIn + riseIn / 2, zIn, fabricColor, 2.2, m, 0, angle)
+  }
+
+  // Rust piping detail along the front arm seam.
+  for (const sideXIn of [-1, 1]) {
+    addCylinderBetween(
+      group,
+      [sideXIn * (rimRadiusXIn - 1), seatTopIn - 1, item.depthIn / 2 - 6],
+      [sideXIn * (item.widthIn / 2 - 3), seatTopIn + 2, -2],
+      0.3,
+      '#9a4a2f',
+      m,
+    )
+  }
+
+  // Houndstooth lumbar pillow leaning on the back.
+  const pillowWidthIn = 15
+  const pillowHeightIn = 9
+  addRoundedBox(group, pillowWidthIn, pillowHeightIn, 3.5, -2, seatTopIn + 6, -item.depthIn / 2 + 8, '#f3f3f0', 2, m, -0.32)
+  for (let row = 0; row < 3; row += 1) {
+    for (let col = 0; col < 5; col += 1) {
+      if ((row + col) % 2 !== 0) continue
+      addBox(
+        group,
+        pillowWidthIn / 6,
+        pillowHeightIn / 4,
+        0.2,
+        -2 - pillowWidthIn / 2 + pillowWidthIn / 6 + col * (pillowWidthIn / 5),
+        seatTopIn + 6 + (row - 1) * (pillowHeightIn / 3.4),
+        -item.depthIn / 2 + 9.5,
+        '#1c1c1c',
+        m,
+      )
+    }
+  }
+
+  // Turned solid-wood gourd legs, splayed to the four corners.
+  const legXIn = item.widthIn / 2 - 7
+  const legZIn = item.depthIn / 2 - 6
+  for (const xIn of [-legXIn, legXIn]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      buildGourdLeg(group, xIn, zIn, legHeightIn, legColor, m)
+    }
+  }
+}
+
+function buildTaobaoVelvetChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const fabricColor = item.colors.primary
+  const shadeColor = item.colors.secondary ?? fabricColor
+  const highlightColor = item.colors.accent ?? fabricColor
+  const seatTopIn = 15
+
+  // Plush rounded drum seat.
+  addRoundedBox(group, item.widthIn - 9, 8, item.depthIn - 8, 0, seatTopIn - 4, 1.5, fabricColor, 5, m)
+  addRoundedBox(group, item.widthIn - 11, 5, item.depthIn - 11, 0, seatTopIn + 1, 1.5, highlightColor, 4.5, m, -0.04)
+
+  // Chunky tubular posts: tall front arms and shorter back legs.
+  const postRadiusIn = 3.2
+  const armTopIn = 23
+  const backLegTopIn = 17
+  const postXIn = item.widthIn / 2 - postRadiusIn
+  const frontZIn = item.depthIn / 2 - postRadiusIn - 1
+  const backZIn = -item.depthIn / 2 + postRadiusIn + 1
+  for (const sideXIn of [-1, 1]) {
+    addRoundedBox(group, postRadiusIn * 2, armTopIn, postRadiusIn * 2, sideXIn * postXIn, armTopIn / 2, frontZIn, shadeColor, postRadiusIn, m)
+    addRoundedBox(group, postRadiusIn * 2, backLegTopIn, postRadiusIn * 2, sideXIn * postXIn, backLegTopIn / 2, backZIn, shadeColor, postRadiusIn, m)
+  }
+
+  // Floating curved backrest band wrapping the rear.
+  const rimRadiusXIn = item.widthIn / 2 - 2
+  const rimRadiusZIn = item.depthIn / 2 - 3
+  const angleMaxRad = (105 * Math.PI) / 180
+  const bandYIn = 23
+  const bandSegments = 13
+  for (let index = 0; index <= bandSegments; index += 1) {
+    const angle = -angleMaxRad + (index / bandSegments) * angleMaxRad * 2
+    const xIn = Math.sin(angle) * rimRadiusXIn
+    const zIn = -Math.cos(angle) * rimRadiusZIn
+    const segmentWidthIn = (angleMaxRad * 2 * rimRadiusXIn) / bandSegments + 2
+    addRoundedBox(group, segmentWidthIn, 7, 4.5, xIn, bandYIn, zIn, fabricColor, 3, m, 0, angle)
+  }
+}
+
+function buildTotoroSofa(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const fabricColor = item.colors.primary
+  const shadeColor = item.colors.secondary ?? fabricColor
+  const highlightColor = item.colors.accent ?? fabricColor
+  const seatTopIn = 15
+
+  // Swivel base disc for the 360° rotating chair.
+  addCylinder(group, item.depthIn / 2 - 3, 1.6, 0, 0.8, 0, '#463228', m)
+
+  // Plush rounded body and seat cushion.
+  addRoundedBox(group, item.widthIn - 6, seatTopIn, item.depthIn - 4, 0, 1.6 + seatTopIn / 2, 1, shadeColor, 6, m)
+  addRoundedBox(group, item.widthIn - 15, 6, item.depthIn - 14, 0, seatTopIn + 4, 2, highlightColor, 5, m, -0.04)
+
+  // Tall curved back.
+  addRoundedBox(group, item.widthIn - 13, item.heightIn - 13, 7, 0, seatTopIn + (item.heightIn - 13) / 2, -item.depthIn / 2 + 4.5, fabricColor, 5, m, -0.05)
+
+  // Chunky arm bolsters that rise to soft Totoro "ear" tips.
+  for (const sideXIn of [-1, 1]) {
+    const armXIn = sideXIn * (item.widthIn / 2 - 4.5)
+    addRoundedBox(group, 8, 24, item.depthIn - 6, armXIn, 1.6 + 12, 0.5, fabricColor, 3.8, m)
+    addConeFrustum(group, 0.6, 3.9, 8, armXIn, 27, -2, fabricColor, m)
+  }
+}
+
+function buildRenbergetChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const leatherColor = item.colors.primary
+  const frameColor = item.colors.secondary ?? '#101012'
+  const stitchColor = item.colors.accent ?? leatherColor
+  const seatTopIn = 19
+  const baseRadiusIn = item.widthIn / 2 - 1
+
+  // Five-star base with castors and a central gas-lift cylinder.
+  addCylinder(group, 2, 3, 0, 3, 0, frameColor, m)
+  const starLegs = 5
+  for (let index = 0; index < starLegs; index += 1) {
+    const angle = (index / starLegs) * Math.PI * 2
+    const endXIn = Math.cos(angle) * baseRadiusIn
+    const endZIn = Math.sin(angle) * baseRadiusIn
+    addCylinderBetween(group, [0, 3, 0], [endXIn, 1.6, endZIn], 0.6, frameColor, m)
+    addSphere(group, 1.2, endXIn, 1.1, endZIn, '#0c0c0d', m)
+  }
+  addCylinder(group, 0.9, 12, 0, 9.5, 0, frameColor, m)
+  addBox(group, 6, 2, 8, 0, 16, 0, frameColor, m)
+
+  // Seat cushion.
+  addRoundedBox(group, 19, 3.5, 18, 0, seatTopIn - 1.75, 1, leatherColor, 2, m)
+  addBox(group, 17, 0.1, 16, 0, seatTopIn + 0.1, 1, stitchColor, m)
+
+  // Reclined backrest with stitching and a lumbar band.
+  addCylinderBetween(group, [0, 16.5, -6], [0, seatTopIn + 3, -8], 1, frameColor, m)
+  addRoundedBox(group, 18, 17, 2.6, 0, seatTopIn + 8.5, -8.6, leatherColor, 3, m, -0.12)
+  addRoundedBox(group, 16, 4, 1.4, 0, seatTopIn + 3.5, -7.4, leatherColor, 2, m, -0.12)
+  for (let line = -2; line <= 2; line += 1) {
+    addBox(group, 15, 0.08, 0.1, 0, seatTopIn + 8.5 + line * 2.6, -7.2, stitchColor, m)
+  }
+
+  // Armrests.
+  for (const sideXIn of [-1, 1]) {
+    addBox(group, 1.4, 6, 1.4, sideXIn * 9.6, seatTopIn + 3, -1, frameColor, m)
+    addRoundedBox(group, 2.6, 1.5, 9, sideXIn * 9.6, seatTopIn + 6, -1, leatherColor, 0.6, m)
+  }
+}
+
+function buildCatClawChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const seatColor = item.colors.primary
+  const frameColor = item.colors.secondary ?? '#1b1b1b'
+  const caneColor = item.colors.accent ?? '#c9a86a'
+  const seatHeightIn = 17.5
+  const legXIn = item.widthIn / 2 - 1.6
+  const legZIn = item.depthIn / 2 - 1.6
+
+  // Green leather seat cushion on a slim frame apron.
+  addRoundedBox(group, item.widthIn, 2.6, item.depthIn, 0, seatHeightIn, 0, seatColor, 1, m)
+  addBox(group, item.widthIn - 1.5, 1.6, item.depthIn - 1.5, 0, seatHeightIn - 2, 0, frameColor, m)
+
+  // Front legs and rear legs that continue up as the back posts.
+  addCylinderBetween(group, [legXIn, 0.4, legZIn], [legXIn - 0.6, seatHeightIn - 2, legZIn - 0.8], 0.55, frameColor, m)
+  addCylinderBetween(group, [-legXIn, 0.4, legZIn], [-legXIn + 0.6, seatHeightIn - 2, legZIn - 0.8], 0.55, frameColor, m)
+  addCylinderBetween(group, [legXIn, 0.4, -legZIn], [legXIn - 0.5, item.heightIn, -legZIn + 1.5], 0.6, frameColor, m)
+  addCylinderBetween(group, [-legXIn, 0.4, -legZIn], [-legXIn + 0.5, item.heightIn, -legZIn + 1.5], 0.6, frameColor, m)
+
+  // Stretchers between legs.
+  addCylinderBetween(group, [legXIn - 0.3, 6, legZIn - 0.4], [legXIn - 0.3, 6, -legZIn + 1], 0.35, frameColor, m)
+  addCylinderBetween(group, [-legXIn + 0.3, 6, legZIn - 0.4], [-legXIn + 0.3, 6, -legZIn + 1], 0.35, frameColor, m)
+  addCylinderBetween(group, [-legXIn + 0.3, 6, legZIn - 0.4], [legXIn - 0.3, 6, legZIn - 0.4], 0.35, frameColor, m)
+
+  // Rounded cane back panel between the rear posts.
+  const backZIn = -item.depthIn / 2 + 2
+  addRoundedBox(group, item.widthIn - 2, 10, 1.3, 0, 27, backZIn, frameColor, 2.4, m)
+  addBox(group, item.widthIn - 6, 8, 0.4, 0, 27, backZIn + 0.5, caneColor, m)
+  for (let index = -3; index <= 3; index += 1) {
+    addBox(group, 0.15, 7.4, 0.5, index * ((item.widthIn - 7) / 7), 27, backZIn + 0.7, frameColor, m)
+  }
+  for (let index = -2; index <= 2; index += 1) {
+    addBox(group, item.widthIn - 6.4, 0.15, 0.5, 0, 27 + index * 1.7, backZIn + 0.7, frameColor, m)
+  }
+}
+
+function buildLinnmonTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const topColor = item.colors.primary
+  const legColor = item.colors.secondary ?? topColor
+  const footColor = item.colors.accent ?? legColor
+  const topThicknessIn = 1.2
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const legHeightIn = item.heightIn - topThicknessIn
+  const legXIn = item.widthIn / 2 - 3
+  const legZIn = item.depthIn / 2 - 3
+
+  addRoundedBox(group, item.widthIn, topThicknessIn, item.depthIn, 0, topYIn, 0, topColor, 0.3, m)
+  for (const xIn of [-legXIn, legXIn]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      addConeFrustum(group, 0.85, 0.55, legHeightIn, xIn, legHeightIn / 2, zIn, legColor, m)
+      addCylinder(group, 0.7, 0.4, xIn, 0.2, zIn, footColor, m)
+    }
+  }
+}
+
+function buildGourdLeg(
+  group: THREE.Group,
+  xIn: number,
+  zIn: number,
+  legHeightIn: number,
+  color: string,
+  m: InchesToMeters,
+) {
+  addSphere(group, 0.5, xIn, 0.5, zIn, color, m)
+  addConeFrustum(group, 1.1, 0.6, legHeightIn * 0.45, xIn, legHeightIn * 0.32, zIn, color, m)
+  addSphere(group, 1.05, xIn, legHeightIn * 0.6, zIn, color, m)
+  addConeFrustum(group, 1.3, 0.9, legHeightIn * 0.3, xIn, legHeightIn * 0.88, zIn, color, m)
 }
 
 function buildHannahRoundTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
@@ -1055,6 +1887,75 @@ function buildBeadLeg(
   })
 }
 
+function buildWallTv(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  addRoundedBox(group, item.widthIn, item.heightIn, item.depthIn, 0, item.heightIn / 2, 0, item.colors.primary, 0.8, m)
+  addRoundedBox(group, item.widthIn - 1.5, item.heightIn - 1.5, 0.25, 0, item.heightIn / 2, item.depthIn / 2 + 0.13, item.colors.secondary ?? '#020617', 0.3, m)
+  addBox(group, item.widthIn * 0.32, 1.2, 0.3, 0, 0.8, item.depthIn / 2 + 0.28, item.colors.accent ?? '#334155', m)
+}
+
+function buildWallArt(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  addRoundedBox(group, item.widthIn, item.heightIn, item.depthIn, 0, item.heightIn / 2, 0, item.colors.secondary ?? item.colors.primary, 0.5, m)
+  addBox(group, item.widthIn - 2.5, item.heightIn - 2.5, 0.3, 0, item.heightIn / 2, item.depthIn / 2 + 0.16, item.colors.primary, m)
+  addBox(group, item.widthIn * 0.65, item.heightIn * 0.28, 0.12, 0, item.heightIn * 0.38, item.depthIn / 2 + 0.34, item.colors.accent ?? item.colors.primary, m)
+}
+
+function buildFloatingConsole(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  addRoundedBox(group, item.widthIn, item.heightIn, item.depthIn, 0, item.heightIn / 2, 0, item.colors.primary, 1, m)
+  addBox(group, 0.5, item.heightIn - 1.5, item.depthIn + 0.2, 0, item.heightIn / 2, 0.1, item.colors.secondary ?? item.colors.primary, m)
+  for (const xIn of [-item.widthIn / 4, item.widthIn / 4]) {
+    addBox(group, item.widthIn / 2 - 2, 0.35, 0.5, xIn, item.heightIn / 2 + 1, item.depthIn / 2 + 0.3, item.colors.accent ?? item.colors.primary, m)
+  }
+}
+
+function buildTaobaoFoldingTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const woodColor = item.colors.primary
+  const bodyColor = item.colors.secondary ?? woodColor
+  const grainColor = item.colors.accent ?? woodColor
+  const topThicknessIn = 1.5
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const casterHeightIn = 1.6
+  const bodyBottomIn = casterHeightIn
+  const bodyTopIn = item.heightIn - topThicknessIn
+  const bodyHeightIn = bodyTopIn - bodyBottomIn
+
+  // Folded-down tabletop panel.
+  addRoundedBox(group, item.widthIn, topThicknessIn, item.depthIn, 0, topYIn, 0, woodColor, 0.6, m)
+
+  // Central folded body holding the collapsed frame.
+  addRoundedBox(group, item.widthIn - 4, bodyHeightIn, item.depthIn - 3, 0, bodyBottomIn + bodyHeightIn / 2, 0, bodyColor, 1, m)
+
+  // Drop leaves folded down flat against the two ends.
+  for (const sideXIn of [-1, 1]) {
+    addRoundedBox(
+      group,
+      1.3,
+      bodyHeightIn - 3,
+      item.depthIn - 1,
+      sideXIn * (item.widthIn / 2 - 0.65),
+      bodyBottomIn + (bodyHeightIn - 3) / 2,
+      0,
+      woodColor,
+      0.5,
+      m,
+    )
+  }
+
+  // Fold seam and grain lines on the top panel.
+  addBox(group, item.widthIn - 6, 0.06, 0.4, 0, topYIn + topThicknessIn / 2, 0, grainColor, m)
+  for (let index = -3; index <= 3; index += 1) {
+    addBox(group, item.widthIn - 5, 0.05, 0.08, 0, topYIn + topThicknessIn / 2 + 0.01, index * 1.6, grainColor, m)
+  }
+
+  // Casters at the base so the folded table can roll away.
+  const casterXIn = item.widthIn / 2 - 3
+  const casterZIn = item.depthIn / 2 - 2.5
+  for (const xIn of [-casterXIn, casterXIn]) {
+    for (const zIn of [-casterZIn, casterZIn]) {
+      addSphere(group, casterHeightIn / 2, xIn, casterHeightIn / 2, zIn, '#2a2320', m)
+    }
+  }
+}
+
 function buildChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const seatHeightIn = 18
   const seatThicknessIn = 2.5
@@ -1201,6 +2102,7 @@ function addRoundedBox(
   radiusIn: number,
   m: InchesToMeters,
   rotationX = 0,
+  rotationY = 0,
 ) {
   const radius = Math.min(m(radiusIn), m(widthIn) / 3, m(heightIn) / 3, m(depthIn) / 3)
   const mesh = new THREE.Mesh(
@@ -1208,7 +2110,7 @@ function addRoundedBox(
     furnitureMaterial(color),
   )
   mesh.position.set(m(xIn), m(yIn), m(zIn))
-  mesh.rotation.x = rotationX
+  mesh.rotation.set(rotationX, rotationY, 0)
   group.add(mesh)
 }
 
