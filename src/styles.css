@@ -102,9 +102,20 @@ body {
   line-height: 1.45;
 }
 
+.library-menu-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 12px 0 14px;
+}
+
 #furniture-catalog {
   display: grid;
   gap: 10px;
+}
+
+#furniture-catalog[hidden] {
+  display: none;
 }
 
 .furniture-category {
@@ -210,6 +221,8 @@ body {
 .furniture-card-shape.comfySebastianChaise,
 .furniture-card-shape.comfyCatalinaRockingChair,
 .furniture-card-shape.castleryLainaChaiseSofa,
+.furniture-card-shape.stockholm2025Sofa,
+.furniture-card-shape.stockholm2025Pouffe,
 .furniture-card-shape.castleryHuggCoffeeTable,
 .furniture-card-shape.castleryHarperCoffeeTable,
 .furniture-card-shape.uoleviCoffeeTable,
@@ -234,6 +247,14 @@ body {
 
 .furniture-card-shape.taobaoFoldingTable {
   background-image: repeating-linear-gradient(0deg, transparent 0 22%, rgba(154, 106, 69, 0.5) 22% 26%);
+}
+
+.furniture-card-shape.measurementBlock {
+  border-color: rgba(96, 165, 250, 0.9);
+  background: rgba(96, 165, 250, 0.35);
+  background-image:
+    linear-gradient(90deg, rgba(239, 68, 68, 0.9) 0 8%, transparent 8%),
+    linear-gradient(rgba(34, 197, 94, 0.9) 0 8%, transparent 8%);
 }
 
 .furniture-card-shape.barslovSofaBed,
@@ -459,10 +480,45 @@ body {
   line-height: 1.4;
 }
 
+#measurement-block-controls,
 #furniture-selection-controls {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+#measurement-block-controls {
+  display: grid;
+  gap: 8px;
+}
+
+#measurement-block-controls[hidden] {
+  display: none;
+}
+
+.measurement-controls-title {
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#measurement-block-controls label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#measurement-block-controls input {
+  width: 76px;
+  padding: 6px 7px;
+  border: 1px solid rgba(147, 197, 253, 0.42);
+  border-radius: 6px;
+  background: #0f172a;
+  color: #f8fafc;
+  font: inherit;
 }
 
 #selected-furniture-name {
@@ -492,6 +548,11 @@ body {
 
 .library-action:hover {
   background: #334763;
+}
+
+.library-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .library-action.danger {

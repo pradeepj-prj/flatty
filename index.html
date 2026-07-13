@@ -16,6 +16,9 @@
           <button class="control-button display-toggle" data-display="labels" type="button" aria-pressed="false">Labels</button>
           <button class="control-button display-toggle" data-display="dimensions" type="button" aria-pressed="false">Dimensions</button>
         </div>
+        <div class="control-group" aria-label="Panels">
+          <button id="toggle-price-panel" class="control-button is-active" type="button" aria-pressed="true">Prices</button>
+        </div>
         <div class="control-group" aria-label="Wall placement">
           <button id="select-wall" class="control-button" type="button" aria-pressed="false">Select wall</button>
           <button id="flip-wall" class="control-button" type="button" hidden>Flip side</button>
@@ -28,9 +31,19 @@
             <p class="eyebrow">Space planner</p>
             <h1>Furniture</h1>
             <p id="library-instructions">Select an item, then click the 2D floor to place it.</p>
+            <div class="library-menu-controls" aria-label="Furniture menu controls">
+              <button id="toggle-category-collapse" class="library-action" type="button">Collapse all</button>
+              <button id="toggle-category-visibility" class="library-action" type="button">Hide categories</button>
+            </div>
           </div>
           <div id="furniture-catalog" aria-label="Available furniture"></div>
           <p id="furniture-status" role="status">Choose an item to start.</p>
+          <div id="measurement-block-controls" hidden>
+            <span class="measurement-controls-title">Measurement block size</span>
+            <label>W <input id="measurement-width" type="number" min="1" max="360" step="0.5" inputmode="decimal" /> in</label>
+            <label>D <input id="measurement-depth" type="number" min="1" max="360" step="0.5" inputmode="decimal" /> in</label>
+            <label>H <input id="measurement-height" type="number" min="1" max="144" step="0.5" inputmode="decimal" /> in</label>
+          </div>
           <div id="furniture-selection-controls" hidden>
             <span id="selected-furniture-name"></span>
             <div class="selection-actions">
