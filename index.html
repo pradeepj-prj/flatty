@@ -16,13 +16,18 @@
           <button class="control-button display-toggle" data-display="labels" type="button" aria-pressed="false">Labels</button>
           <button class="control-button display-toggle" data-display="dimensions" type="button" aria-pressed="false">Dimensions</button>
         </div>
+        <div class="control-group" aria-label="Wall placement">
+          <button id="select-wall" class="control-button" type="button" aria-pressed="false">Select wall</button>
+          <button id="flip-wall" class="control-button" type="button" hidden>Flip side</button>
+          <button id="exit-wall" class="control-button" type="button" hidden>Back to flat</button>
+        </div>
       </header>
       <div id="workspace">
         <aside id="furniture-library" aria-label="Furniture library">
           <div class="library-heading">
             <p class="eyebrow">Space planner</p>
             <h1>Furniture</h1>
-            <p>Select an item, then click the 2D floor to place it.</p>
+            <p id="library-instructions">Select an item, then click the 2D floor to place it.</p>
           </div>
           <div id="furniture-catalog" aria-label="Available furniture"></div>
           <p id="furniture-status" role="status">Choose an item to start.</p>

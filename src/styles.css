@@ -211,17 +211,29 @@ body {
 .furniture-card-shape.comfyCatalinaRockingChair,
 .furniture-card-shape.castleryLainaChaiseSofa,
 .furniture-card-shape.castleryHuggCoffeeTable,
+.furniture-card-shape.castleryHarperCoffeeTable,
+.furniture-card-shape.uoleviCoffeeTable,
 .furniture-card-shape.hannahRoundTable,
 .furniture-card-shape.ceasarStudyDesk,
 .furniture-card-shape.wilfredoStorageSet,
 .furniture-card-shape.castlerySebDiningBench,
 .furniture-card-shape.tymaLoungeChair,
+.furniture-card-shape.taobaoGreenChair,
+.furniture-card-shape.taobaoVelvetChair,
+.furniture-card-shape.totoroSofa,
+.furniture-card-shape.catClawChair,
+.furniture-card-shape.linnmonTable,
 .furniture-card-shape.arecaPalmPlant,
 .furniture-card-shape.monsteraPlant,
 .furniture-card-shape.jarnvagRug,
 .furniture-card-shape.kivikChaiseSofa,
-.furniture-card-shape.vimleChaiseSofa {
+.furniture-card-shape.vimleChaiseSofa,
+.furniture-card-shape.taobaoFoldingTable {
   border-radius: 6px;
+}
+
+.furniture-card-shape.taobaoFoldingTable {
+  background-image: repeating-linear-gradient(0deg, transparent 0 22%, rgba(154, 106, 69, 0.5) 22% 26%);
 }
 
 .furniture-card-shape.barslovSofaBed,
@@ -244,6 +256,30 @@ body {
   background-image: repeating-linear-gradient(90deg, transparent 0 9%, rgba(23, 23, 23, 0.35) 9% 12%);
 }
 
+.furniture-card-shape.kamdenDesk,
+.furniture-card-shape.kamdenDeskMirror {
+  border-radius: 4px;
+  /* L-shaped hint: full-depth main block plus a shallow back wing. */
+  background-image:
+    linear-gradient(to bottom, rgba(141, 93, 56, 0.9) 0 46%, transparent 46% 100%),
+    linear-gradient(to left, rgba(141, 93, 56, 0.9) 0 52%, transparent 52% 100%);
+}
+
+.furniture-card-shape.kamdenDeskMirror {
+  background-image:
+    linear-gradient(to bottom, rgba(141, 93, 56, 0.9) 0 46%, transparent 46% 100%),
+    linear-gradient(to right, rgba(141, 93, 56, 0.9) 0 52%, transparent 52% 100%);
+}
+
+.furniture-card-shape.selbyDesk {
+  border-radius: 3px;
+  /* L-shaped hint: full-depth left block plus a shallower back strip across the top. */
+  background-image:
+    linear-gradient(to bottom, rgba(154, 149, 141, 0.85) 0 44%, transparent 44% 100%),
+    linear-gradient(to right, rgba(154, 149, 141, 0.85) 0 42%, transparent 42% 100%),
+    linear-gradient(to right, rgba(26, 26, 26, 0.5) 0 34%, transparent 34% 100%);
+}
+
 .furniture-card-shape.castlerySebDiningBench {
   border-radius: 8px;
   background-image: linear-gradient(to bottom, #3d4142 0 45%, transparent 45% 100%);
@@ -256,8 +292,44 @@ body {
     linear-gradient(transparent 0 46%, rgba(138, 85, 43, 0.6) 46% 49%, transparent 49%);
 }
 
+.furniture-card-shape.omarShelvingUnit {
+  border-radius: 3px;
+  background-image: repeating-linear-gradient(transparent 0 30%, rgba(90, 96, 102, 0.7) 30% 36%);
+}
+
+.furniture-card-shape.bestaTvBench {
+  border-radius: 3px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 30%, rgba(42, 34, 31, 0.7) 30% 34%);
+}
+
+.furniture-card-shape.eketCabinet {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px rgba(92, 61, 36, 0.9);
+}
+
 .furniture-card-shape.tymaLoungeChair {
   border-radius: 8px 8px 12px 12px;
+}
+
+.furniture-card-shape.taobaoGreenChair {
+  border-radius: 16px 16px 10px 10px;
+}
+
+.furniture-card-shape.taobaoVelvetChair {
+  border-radius: 18px 18px 14px 14px;
+}
+
+.furniture-card-shape.totoroSofa {
+  border-radius: 16px 16px 12px 12px;
+}
+
+.furniture-card-shape.catClawChair {
+  border-radius: 5px 5px 8px 8px;
+  background-image: linear-gradient(to bottom, rgba(27, 27, 27, 0.55) 0 34%, transparent 34% 100%);
+}
+
+.furniture-card-shape.linnmonTable {
+  border-radius: 3px;
 }
 
 .furniture-card-shape.arecaPalmPlant,
@@ -266,6 +338,37 @@ body {
   background-image:
     radial-gradient(circle at 50% 36%, rgba(46, 138, 34, 0.95) 0 36%, transparent 38%),
     linear-gradient(to bottom, transparent 52%, #b96536 52% 100%);
+}
+
+.furniture-card-shape.deskMonitor {
+  border-radius: 3px;
+  background-image:
+    linear-gradient(to bottom, #20242a 0 74%, transparent 74% 100%),
+    linear-gradient(#0a0c0f, #0a0c0f);
+  background-size: 100% 100%, 74% 56%;
+  background-position: center, center 30%;
+  background-repeat: no-repeat;
+}
+
+.furniture-card-shape.wallTv,
+.furniture-card-shape.wallArt,
+.furniture-card-shape.floatingConsole {
+  border: 3px solid #334155;
+  border-radius: 3px;
+}
+
+.furniture-card-shape.wallTv {
+  box-shadow: inset 0 0 0 2px #020617;
+}
+
+.furniture-card-shape.castleryHarperCoffeeTable {
+  border-radius: 999px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 7%, rgba(131, 79, 43, 0.5) 7% 10%);
+}
+
+.furniture-card-shape.uoleviCoffeeTable {
+  border-radius: 4px;
+  background-image: linear-gradient(to bottom, #d9bd8b 0 62%, transparent 62% 100%);
 }
 
 .furniture-card-shape.hannahRoundTable,
