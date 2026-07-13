@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 
 export type FurnitureKind =
   | 'bed'
+  | 'miyoBed'
   | 'sofa'
   | 'barslovSofaBed'
   | 'jaetteboModule'
@@ -10,8 +11,13 @@ export type FurnitureKind =
   | 'comfySebastianChaise'
   | 'comfyCatalinaRockingChair'
   | 'castleryLainaChaiseSofa'
+  | 'kingAuraChaiseSofa'
+  | 'king1977ChaiseSofa'
+  | 'stockholm2025Sofa'
+  | 'stockholm2025Pouffe'
   | 'castleryHuggCoffeeTable'
   | 'castleryHarperCoffeeTable'
+  | 'castleryHarperRoundDiningTable'
   | 'uoleviCoffeeTable'
   | 'hannahRoundTable'
   | 'ceasarStudyDesk'
@@ -22,7 +28,9 @@ export type FurnitureKind =
   | 'omarShelvingUnit'
   | 'bestaTvBench'
   | 'eketCabinet'
+  | 'prismSingleFridge'
   | 'castlerySebDiningBench'
+  | 'castleryCallieBanquette'
   | 'tymaLoungeChair'
   | 'taobaoGreenChair'
   | 'taobaoVelvetChair'
@@ -38,11 +46,14 @@ export type FurnitureKind =
   | 'table'
   | 'chair'
   | 'beadTable'
+  | 'merlynDiningTable'
+  | 'castleryArlenDiningTable'
   | 'taobaoFoldingTable'
   | 'renbergetChair'
   | 'wallTv'
   | 'wallArt'
   | 'floatingConsole'
+  | 'measurementBlock'
 
 export type FurnitureDefinition = {
   id: string
@@ -63,6 +74,12 @@ export type FurnitureDefinition = {
   }
 }
 
+export type FurnitureDimensionsIn = {
+  widthIn: number
+  depthIn: number
+  heightIn: number
+}
+
 export type FloorFurniturePlacement = {
   id: string
   furnitureId: string
@@ -72,6 +89,7 @@ export type FloorFurniturePlacement = {
   // Height of the supporting surface (0 for the floor, a furniture top otherwise).
   elevationIn?: number
   rotationDegrees: number
+  customDimensionsIn?: FurnitureDimensionsIn
 }
 
 export type WallFurniturePlacement = {
@@ -89,6 +107,17 @@ export type FurniturePlacement = FloorFurniturePlacement | WallFurniturePlacemen
 type InchesToMeters = (inches: number) => number
 
 export const furnitureCatalog: FurnitureDefinition[] = [
+  {
+    id: 'measurement-block',
+    name: 'Measurement Block',
+    category: 'Planning',
+    kind: 'measurementBlock',
+    widthIn: 36,
+    depthIn: 24,
+    heightIn: 30,
+    cost: 0,
+    colors: { primary: '#60a5fa', secondary: '#1d4ed8', accent: '#facc15' },
+  },
   {
     id: '55-inch-wall-tv',
     name: '55-inch Wall TV',
@@ -147,6 +176,18 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     heightIn: 42,
     cost: 0,
     colors: { primary: '#e5ddd2', secondary: '#8a6245', accent: '#b8c7d9' },
+  },
+  {
+    // Reference: Castlery Miyo upholstered queen bed, Performance Genova Oat, 176 x 213 x 115 cm.
+    id: 'castlery-miyo-queen-bed',
+    name: 'Castlery Miyo Queen Bed',
+    category: 'Beds',
+    kind: 'miyoBed',
+    widthIn: 69.3,
+    depthIn: 83.9,
+    heightIn: 45.3,
+    cost: 1099,
+    colors: { primary: '#d7cfc1', secondary: '#eee8dc', accent: '#f8f5ee' },
   },
   {
     id: 'three-seat-sofa',
@@ -232,6 +273,54 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#b8783f', secondary: '#8f552d', accent: '#c8925c' },
   },
   {
+    // Reference: King Aura modular sofa with right chaise, 2650 mm wide.
+    id: 'king-aura-rh-chaise-sofa',
+    name: 'King Aura RH Chaise Sofa',
+    category: 'Sofas',
+    kind: 'kingAuraChaiseSofa',
+    widthIn: 104.5,
+    depthIn: 66,
+    heightIn: 31,
+    cost: 6729,
+    colors: { primary: '#eee8df', secondary: '#d8d0c4', accent: '#f7f3ec' },
+  },
+  {
+    // Reference: King 1977 sectional sofa with chaise, Package 3, 104 in wide.
+    id: 'king-1977-pkg3-chaise-sofa',
+    name: 'King 1977 Package 3 Sofa',
+    category: 'Sofas',
+    kind: 'king1977ChaiseSofa',
+    widthIn: 104,
+    depthIn: 67,
+    heightIn: 30,
+    cost: 4827,
+    colors: { primary: '#79846e', secondary: '#65725d', accent: '#8e9a82' },
+  },
+  {
+    // Reference: IKEA STOCKHOLM 2025 3-seat sofa, Alhamn dark brown, 243 x 99 x 70 cm.
+    id: 'ikea-stockholm-2025-3-seat-sofa',
+    name: 'STOCKHOLM 2025 3-seat Sofa',
+    category: 'Sofas',
+    kind: 'stockholm2025Sofa',
+    widthIn: 95.7,
+    depthIn: 39,
+    heightIn: 27.6,
+    cost: 2199,
+    colors: { primary: '#4a2f22', secondary: '#2f1d15', accent: '#6a4635' },
+  },
+  {
+    // Reference: IKEA STOCKHOLM 2025 pouffe, Alhamn dark brown, 69 x 65 x 40 cm.
+    id: 'ikea-stockholm-2025-pouffe',
+    name: 'STOCKHOLM 2025 Pouffe',
+    category: 'Ottomans',
+    kind: 'stockholm2025Pouffe',
+    widthIn: 27.2,
+    depthIn: 25.6,
+    heightIn: 15.7,
+    cost: 350,
+    colors: { primary: '#4a2f22', secondary: '#2f1d15', accent: '#6a4635' },
+  },
+  {
     // Reference: Castlery Hugg nesting rectangular coffee table, table 110 x 55 x 43.2 cm.
     id: 'castlery-hugg-nesting-coffee-table',
     name: 'Castlery Hugg Coffee Table',
@@ -254,6 +343,18 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     heightIn: 15.4,
     cost: 999,
     colors: { primary: '#a5673a', secondary: '#834f2b', accent: '#c98a54' },
+  },
+  {
+    // Reference: Castlery Harper round dining table, chestnut, 120 x 120 x 76 cm, top 4.7 cm.
+    id: 'castlery-harper-round-dining-table',
+    name: 'Castlery Harper Round Dining Table',
+    category: 'Tables',
+    kind: 'castleryHarperRoundDiningTable',
+    widthIn: 47.2,
+    depthIn: 47.2,
+    heightIn: 29.9,
+    cost: 1099,
+    colors: { primary: '#a5673a', secondary: '#7b4524', accent: '#c98750' },
   },
   {
     // Reference: 42 Uolevi lift-top coffee table, wood storage box on square-tube metal frame, 100 x 55 x 40 cm.
@@ -402,6 +503,30 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#9a6333', secondary: '#3d4142', accent: '#70431f' },
   },
   {
+    // Reference: Castlery Callie L-shaped storage banquette, W120/192 x D135 x H80 cm.
+    id: 'castlery-callie-b-banquette',
+    name: 'Castlery Callie B Banquette',
+    category: 'Benches',
+    kind: 'castleryCallieBanquette',
+    widthIn: 75.6,
+    depthIn: 53.1,
+    heightIn: 31.5,
+    cost: 1317,
+    colors: { primary: '#ebe5dc', secondary: '#d6cec2', accent: '#f7f2eb' },
+  },
+  {
+    // Reference: Castlery Callie extended L-shaped storage banquette, W120/192 x D192 x H80 cm.
+    id: 'castlery-callie-l-shape-banquette',
+    name: 'Castlery Callie Extended Banquette',
+    category: 'Benches',
+    kind: 'castleryCallieBanquette',
+    widthIn: 75.6,
+    depthIn: 75.6,
+    heightIn: 31.5,
+    cost: 1317,
+    colors: { primary: '#ebe5dc', secondary: '#d6cec2', accent: '#f7f2eb' },
+  },
+  {
     // Reference: 42 Tyma lounge chair, 99 x 105 x 69 cm.
     id: 'fortytwo-tyma-lounge-chair',
     name: '42 Tyma Lounge Chair',
@@ -548,6 +673,30 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     colors: { primary: '#9a6845', secondary: '#5f412f' },
   },
   {
+    // Reference: Castlery Arlen sintered stone dining table, 150 x 80 x 76 cm.
+    id: 'castlery-arlen-sintered-stone-dining-table',
+    name: 'Castlery Arlen Dining Table',
+    category: 'Tables',
+    kind: 'castleryArlenDiningTable',
+    widthIn: 59.1,
+    depthIn: 31.5,
+    heightIn: 29.9,
+    cost: 899,
+    colors: { primary: '#ded8c5', secondary: '#7a4a2c', accent: '#c6b99f' },
+  },
+  {
+    // Reference: COURTS Merlyn dining table, walnut veneer, 180 x 90 x 75 cm.
+    id: 'courts-merlyn-dining-table',
+    name: 'Merlyn Dining Table',
+    category: 'Tables',
+    kind: 'merlynDiningTable',
+    widthIn: 70.9,
+    depthIn: 35.4,
+    heightIn: 29.5,
+    cost: 540,
+    colors: { primary: '#8a5a32', secondary: '#70421f', accent: '#a06d3d' },
+  },
+  {
     // Reference: white painted stadium top on chunky orange solid-wood ball legs, 100 x 60 x 75 cm.
     id: 'sculpted-dining-table',
     name: 'Sculpted Dining Table',
@@ -594,6 +743,18 @@ export const furnitureCatalog: FurnitureDefinition[] = [
     cost: 99,
     colors: { primary: '#1e1e20', secondary: '#101012', accent: '#33333a' },
   },
+  {
+    // Reference: PRISM+ single fridge BMF330, black inox, 600 x 685 x 1840 mm.
+    id: 'prism-single-fridge-bmf330',
+    name: 'PRISM+ Single Fridge',
+    category: 'Appliances',
+    kind: 'prismSingleFridge',
+    widthIn: 23.6,
+    depthIn: 27,
+    heightIn: 72.4,
+    cost: 789,
+    colors: { primary: '#1c1c1c', secondary: '#2a2a2a', accent: '#0f0f0f' },
+  },
 ]
 
 export function createFurnitureModel(definition: FurnitureDefinition, m: InchesToMeters) {
@@ -601,6 +762,7 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   group.name = definition.name
 
   if (definition.kind === 'bed') buildBed(group, definition, m)
+  if (definition.kind === 'miyoBed') buildMiyoBed(group, definition, m)
   if (definition.kind === 'sofa') buildSofa(group, definition, m)
   if (definition.kind === 'barslovSofaBed') buildBarslovSofaBed(group, definition, m)
   if (definition.kind === 'jaetteboModule') buildJaetteboModule(group, definition, m)
@@ -608,8 +770,13 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   if (definition.kind === 'comfySebastianChaise') buildComfySebastianChaise(group, definition, m)
   if (definition.kind === 'comfyCatalinaRockingChair') buildComfyCatalinaRockingChair(group, definition, m)
   if (definition.kind === 'castleryLainaChaiseSofa') buildCastleryLainaChaiseSofa(group, definition, m)
+  if (definition.kind === 'kingAuraChaiseSofa') buildKingAuraChaiseSofa(group, definition, m)
+  if (definition.kind === 'king1977ChaiseSofa') buildKing1977ChaiseSofa(group, definition, m)
+  if (definition.kind === 'stockholm2025Sofa') buildStockholm2025Sofa(group, definition, m)
+  if (definition.kind === 'stockholm2025Pouffe') buildStockholm2025Pouffe(group, definition, m)
   if (definition.kind === 'castleryHuggCoffeeTable') buildCastleryHuggCoffeeTable(group, definition, m)
   if (definition.kind === 'castleryHarperCoffeeTable') buildCastleryHarperCoffeeTable(group, definition, m)
+  if (definition.kind === 'castleryHarperRoundDiningTable') buildCastleryHarperRoundDiningTable(group, definition, m)
   if (definition.kind === 'uoleviCoffeeTable') buildUoleviCoffeeTable(group, definition, m)
   if (definition.kind === 'hannahRoundTable') buildHannahRoundTable(group, definition, m)
   if (definition.kind === 'ceasarStudyDesk') buildCeasarStudyDesk(group, definition, m)
@@ -620,7 +787,9 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   if (definition.kind === 'omarShelvingUnit') buildOmarShelvingUnit(group, definition, m)
   if (definition.kind === 'bestaTvBench') buildBestaTvBench(group, definition, m)
   if (definition.kind === 'eketCabinet') buildEketCabinet(group, definition, m)
+  if (definition.kind === 'prismSingleFridge') buildPrismSingleFridge(group, definition, m)
   if (definition.kind === 'castlerySebDiningBench') buildCastlerySebDiningBench(group, definition, m)
+  if (definition.kind === 'castleryCallieBanquette') buildCastleryCallieBanquette(group, definition, m)
   if (definition.kind === 'tymaLoungeChair') buildTymaLoungeChair(group, definition, m)
   if (definition.kind === 'taobaoGreenChair') buildTaobaoGreenChair(group, definition, m)
   if (definition.kind === 'taobaoVelvetChair') buildTaobaoVelvetChair(group, definition, m)
@@ -636,11 +805,14 @@ export function createFurnitureModel(definition: FurnitureDefinition, m: InchesT
   if (definition.kind === 'vimleChaiseSofa') buildVimleChaiseSofa(group, definition, m)
   if (definition.kind === 'table') buildTable(group, definition, m)
   if (definition.kind === 'beadTable') buildBeadTable(group, definition, m)
+  if (definition.kind === 'merlynDiningTable') buildMerlynDiningTable(group, definition, m)
+  if (definition.kind === 'castleryArlenDiningTable') buildCastleryArlenDiningTable(group, definition, m)
   if (definition.kind === 'taobaoFoldingTable') buildTaobaoFoldingTable(group, definition, m)
   if (definition.kind === 'chair') buildChair(group, definition, m)
   if (definition.kind === 'wallTv') buildWallTv(group, definition, m)
   if (definition.kind === 'wallArt') buildWallArt(group, definition, m)
   if (definition.kind === 'floatingConsole') buildFloatingConsole(group, definition, m)
+  if (definition.kind === 'measurementBlock') buildMeasurementBlock(group, definition, m)
 
   group.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return
@@ -710,6 +882,34 @@ function buildBed(group: THREE.Group, item: FurnitureDefinition, m: InchesToMete
       2,
       m,
     )
+  }
+}
+
+function buildMiyoBed(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const frameHeightIn = 12.6
+  const slatHeightIn = 11.4
+  const railThicknessIn = 4.2
+  const headboardThicknessIn = 5.2
+  const mattressWidthIn = 60.6
+  const mattressDepthIn = 78.7
+  const mattressHeightIn = 10
+  const innerDepthCenterZIn = (item.depthIn - headboardThicknessIn) / 2 - mattressDepthIn / 2
+
+  addRoundedBox(group, item.widthIn, frameHeightIn, item.depthIn - 2, 0, frameHeightIn / 2 + 1, 0, item.colors.primary, 2.8, m)
+  addRoundedBox(group, item.widthIn - railThicknessIn * 2, frameHeightIn + 0.5, item.depthIn - headboardThicknessIn - railThicknessIn, 0, frameHeightIn / 2 + 2, innerDepthCenterZIn, item.colors.accent ?? item.colors.primary, 1.2, m)
+  addRoundedBox(group, item.widthIn, item.heightIn, headboardThicknessIn, 0, item.heightIn / 2, -item.depthIn / 2 + headboardThicknessIn / 2, item.colors.primary, 3, m)
+  addRoundedBox(group, mattressWidthIn, mattressHeightIn, mattressDepthIn, 0, slatHeightIn + mattressHeightIn / 2 + 1.2, innerDepthCenterZIn, item.colors.secondary ?? '#eee8dc', 2, m)
+
+  const slatCount = 12
+  for (let index = 0; index < slatCount; index += 1) {
+    const zIn = -item.depthIn / 2 + headboardThicknessIn + 6 + index * ((item.depthIn - headboardThicknessIn - 14) / (slatCount - 1))
+    addBox(group, mattressWidthIn - 2, 0.7, 1.6, 0, slatHeightIn, zIn, '#2e2a24', m)
+  }
+
+  for (const xIn of [-item.widthIn / 2 + 3, item.widthIn / 2 - 3]) {
+    for (const zIn of [-item.depthIn / 2 + 6, item.depthIn / 2 - 5]) {
+      addBox(group, 1.4, 1, 1.4, xIn, 0.5, zIn, '#4b3424', m)
+    }
   }
 }
 
@@ -891,6 +1091,101 @@ function buildCastleryLainaChaiseSofa(group: THREE.Group, item: FurnitureDefinit
   addChaiseSofaLegs(group, item, normalDepthIn, chaiseXIn, chaiseWidthIn, 5.5, '#9c8f6a', m)
 }
 
+function buildKingAuraChaiseSofa(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const mainDepthIn = 38
+  const chaiseWidthIn = 34
+  const chaiseXIn = item.widthIn / 2 - chaiseWidthIn / 2
+  const mainCenterZIn = -item.depthIn / 2 + mainDepthIn / 2
+  const seatTopYIn = 16
+  const moduleWidthIn = (item.widthIn - chaiseWidthIn) / 2
+
+  addRoundedBox(group, item.widthIn, 9, mainDepthIn, 0, 8, mainCenterZIn, item.colors.secondary ?? item.colors.primary, 7, m)
+  addRoundedBox(group, chaiseWidthIn, 9, item.depthIn, chaiseXIn, 8, 0, item.colors.secondary ?? item.colors.primary, 8, m)
+  addRoundedBox(group, item.widthIn, 17, 7, 0, 24, -item.depthIn / 2 + 4, item.colors.primary, 7, m, -0.06)
+  addRoundedBox(group, 7, 17, mainDepthIn, -item.widthIn / 2 + 3.5, 19, mainCenterZIn, item.colors.primary, 6, m)
+  addRoundedBox(group, 7, 17, item.depthIn - 2, item.widthIn / 2 - 3.5, 19, 0, item.colors.primary, 6, m)
+
+  for (let index = 0; index < 2; index += 1) {
+    const xIn = -item.widthIn / 2 + moduleWidthIn / 2 + index * moduleWidthIn
+    addRoundedBox(group, moduleWidthIn - 1, 6, 27, xIn, seatTopYIn, -4, item.colors.primary, 7, m)
+    addBox(group, 0.45, 6, 27, xIn + moduleWidthIn / 2, seatTopYIn + 1, -4, '#cfc7bb', m)
+  }
+  addRoundedBox(group, chaiseWidthIn - 1, 6, item.depthIn - 10, chaiseXIn, seatTopYIn, 3, item.colors.primary, 8, m)
+  addBox(group, 0.45, 6, 27, chaiseXIn - chaiseWidthIn / 2, seatTopYIn + 1, -4, '#cfc7bb', m)
+  addChaiseSofaLegs(group, item, mainDepthIn, chaiseXIn, chaiseWidthIn, 3, '#2a2724', m)
+}
+
+function buildKing1977ChaiseSofa(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const mainDepthIn = 38
+  const chaiseWidthIn = 34
+  const chaiseXIn = -item.widthIn / 2 + chaiseWidthIn / 2
+  const regularWidthIn = item.widthIn - chaiseWidthIn
+  const mainCenterZIn = -item.depthIn / 2 + mainDepthIn / 2
+  const seatTopYIn = 15
+
+  addRoundedBox(group, item.widthIn, 9, mainDepthIn, 0, 8, mainCenterZIn, item.colors.secondary ?? item.colors.primary, 5, m)
+  addRoundedBox(group, chaiseWidthIn, 9, item.depthIn, chaiseXIn, 8, 0, item.colors.secondary ?? item.colors.primary, 6, m)
+  addRoundedBox(group, item.widthIn, 16, 7, 0, 23, -item.depthIn / 2 + 4, item.colors.primary, 5, m, -0.05)
+  addRoundedBox(group, 7, 16, item.depthIn - 3, -item.widthIn / 2 + 3.5, 18, 0, item.colors.primary, 5, m)
+  addRoundedBox(group, 7, 16, mainDepthIn, item.widthIn / 2 - 3.5, 18, mainCenterZIn, item.colors.primary, 5, m)
+  addRoundedBox(group, chaiseWidthIn - 1, 6, item.depthIn - 10, chaiseXIn, seatTopYIn, 3, item.colors.primary, 6, m)
+
+  for (let index = 0; index < 2; index += 1) {
+    const cushionWidthIn = regularWidthIn / 2 - 1
+    const xIn = -item.widthIn / 2 + chaiseWidthIn + cushionWidthIn / 2 + index * (cushionWidthIn + 1)
+    addRoundedBox(group, cushionWidthIn, 6, 27, xIn, seatTopYIn, -4, item.colors.primary, 5, m)
+    addRoundedBox(group, cushionWidthIn - 1, 13, 5.5, xIn, 24, -item.depthIn / 2 + 8, item.colors.accent ?? item.colors.primary, 4, m, -0.08)
+  }
+  addChaiseSofaLegs(group, item, mainDepthIn, chaiseXIn, chaiseWidthIn, 3, '#1f1f1d', m)
+}
+
+function buildStockholm2025Sofa(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const fabricColor = item.colors.primary
+  const shadowColor = item.colors.secondary ?? fabricColor
+  const highlightColor = item.colors.accent ?? fabricColor
+  const armWidthIn = 12.6
+  const seatHeightIn = 15.7
+  const seatThicknessIn = 6.2
+  const baseHeightIn = 5.2
+  const backDepthIn = 7.4
+  const seatDepthIn = 25.2
+  const innerWidthIn = item.widthIn - armWidthIn * 2
+  const moduleWidthIn = innerWidthIn / 3
+
+  addRoundedBox(group, item.widthIn - 3, baseHeightIn, item.depthIn - 5, 0, baseHeightIn / 2, 0.8, shadowColor, 2.4, m)
+  addRoundedBox(group, item.widthIn, 13, backDepthIn, 0, item.heightIn - 6.5, -item.depthIn / 2 + backDepthIn / 2, fabricColor, 3.4, m)
+
+  for (const xIn of [-item.widthIn / 2 + armWidthIn / 2, item.widthIn / 2 - armWidthIn / 2]) {
+    addRoundedBox(group, armWidthIn, item.heightIn, item.depthIn, xIn, item.heightIn / 2, 0, fabricColor, 3.6, m)
+  }
+
+  for (let index = 0; index < 3; index += 1) {
+    const xIn = -innerWidthIn / 2 + moduleWidthIn / 2 + index * moduleWidthIn
+    addRoundedBox(group, moduleWidthIn - 1.2, seatThicknessIn, seatDepthIn, xIn, seatHeightIn - seatThicknessIn / 2, 4.2, fabricColor, 3, m)
+    addRoundedBox(group, moduleWidthIn - 1.8, 8.4, 4.5, xIn, item.heightIn - 9.5, -item.depthIn / 2 + backDepthIn + 1.3, highlightColor, 2.2, m, -0.08)
+  }
+
+  for (const xIn of [-innerWidthIn / 6, innerWidthIn / 6]) {
+    addBox(group, 0.45, 0.18, seatDepthIn - 2, xIn, seatHeightIn + 0.1, 4.2, shadowColor, m)
+    addBox(group, 0.42, 7.2, 0.18, xIn, item.heightIn - 9.2, -item.depthIn / 2 + backDepthIn + 3.7, shadowColor, m)
+  }
+}
+
+function buildStockholm2025Pouffe(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const fabricColor = item.colors.primary
+  const shadowColor = item.colors.secondary ?? fabricColor
+  const highlightColor = item.colors.accent ?? fabricColor
+  const baseHeightIn = 3.2
+  const cushionHeightIn = item.heightIn - baseHeightIn
+
+  addRoundedBox(group, item.widthIn - 1.2, baseHeightIn, item.depthIn - 1.2, 0, baseHeightIn / 2, 0, shadowColor, 2.2, m)
+  addRoundedBox(group, item.widthIn, cushionHeightIn, item.depthIn, 0, baseHeightIn + cushionHeightIn / 2, 0, fabricColor, 3.2, m)
+  addRoundedBox(group, item.widthIn - 2.4, 0.45, item.depthIn - 2.4, 0, item.heightIn + 0.12, 0, highlightColor, 2.4, m)
+
+  addBox(group, 0.35, 0.16, item.depthIn - 4, 0, item.heightIn + 0.22, 0, shadowColor, m)
+  addBox(group, item.widthIn - 4, 0.16, 0.35, 0, item.heightIn + 0.24, 0, shadowColor, m)
+}
+
 function buildCastleryHuggCoffeeTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const woodColor = item.colors.primary
   const cushionColor = item.colors.secondary ?? '#efe8dc'
@@ -944,6 +1239,43 @@ function buildUoleviCoffeeTable(group: THREE.Group, item: FurnitureDefinition, m
     for (const xIn of [-legXIn, legXIn]) {
       addBox(group, tubeIn, tubeIn, legZIn * 2 + tubeIn, xIn, yIn, 0, metalColor, m)
     }
+  }
+}
+
+function buildCastleryHarperRoundDiningTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const woodColor = item.colors.primary
+  const bodyColor = item.colors.secondary ?? woodColor
+  const fluteColor = item.colors.accent ?? woodColor
+  const topThicknessIn = 4.7 / 2.54
+  const topRadiusIn = item.widthIn / 2
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const legHeightIn = item.heightIn - topThicknessIn
+  const pedestalRadiusIn = 8.8
+
+  addCylinder(group, topRadiusIn, topThicknessIn, 0, topYIn, 0, woodColor, m)
+  addCylinder(group, topRadiusIn - 0.8, 0.45, 0, item.heightIn - topThicknessIn - 0.22, 0, bodyColor, m)
+  addCylinder(group, pedestalRadiusIn - 0.45, legHeightIn, 0, legHeightIn / 2, 0, bodyColor, m)
+  addCylinder(group, pedestalRadiusIn - 1.3, 0.7, 0, 0.35, 0, bodyColor, m)
+
+  const fluteCount = 44
+  const fluteHeightIn = legHeightIn - 0.8
+  for (let index = 0; index < fluteCount; index += 1) {
+    const angle = (index / fluteCount) * Math.PI * 2
+    const color = index % 2 === 0 ? fluteColor : woodColor
+    addCylinder(
+      group,
+      0.22,
+      fluteHeightIn,
+      Math.cos(angle) * pedestalRadiusIn,
+      0.4 + fluteHeightIn / 2,
+      Math.sin(angle) * pedestalRadiusIn,
+      color,
+      m,
+    )
+  }
+
+  for (let index = -3; index <= 3; index += 1) {
+    addBox(group, item.widthIn * 0.72, 0.035, 0.05, 0, item.heightIn + 0.04, index * 2.4, fluteColor, m)
   }
 }
 
@@ -1416,6 +1748,39 @@ function buildCastlerySebDiningBench(group: THREE.Group, item: FurnitureDefiniti
   }
 }
 
+function buildCastleryCallieBanquette(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const seatDepthIn = 19.5
+  const seatHeightIn = 19.5
+  const backHeightIn = 13.4
+  const backThicknessIn = 5
+  const fabricColor = item.colors.primary
+  const seamColor = item.colors.secondary ?? '#d6cec2'
+  const highlightColor = item.colors.accent ?? fabricColor
+  const rearZIn = -item.depthIn / 2 + backThicknessIn / 2
+  const rightXIn = item.widthIn / 2 - backThicknessIn / 2
+  const horizontalSeatZIn = -item.depthIn / 2 + backThicknessIn + seatDepthIn / 2
+  const verticalSeatXIn = item.widthIn / 2 - backThicknessIn - seatDepthIn / 2
+
+  // Seat/storage bases form an L: a full rear bench plus a full-depth right bench.
+  addRoundedBox(group, item.widthIn, seatHeightIn, seatDepthIn, 0, seatHeightIn / 2, horizontalSeatZIn, fabricColor, 3.5, m)
+  addRoundedBox(group, seatDepthIn, seatHeightIn, item.depthIn, verticalSeatXIn, seatHeightIn / 2, 0, fabricColor, 3.5, m)
+
+  // Continuous L-shaped back: rear back and side back overlap at the corner.
+  addRoundedBox(group, item.widthIn, backHeightIn, backThicknessIn, 0, seatHeightIn + backHeightIn / 2, rearZIn, fabricColor, 3, m, -0.04)
+  addRoundedBox(group, backThicknessIn, backHeightIn, item.depthIn, rightXIn, seatHeightIn + backHeightIn / 2, 0, fabricColor, 3, m, -0.04)
+  addRoundedBox(group, backThicknessIn + 2, backHeightIn, backThicknessIn + 2, rightXIn - 0.5, seatHeightIn + backHeightIn / 2, rearZIn + 0.5, fabricColor, 2.5, m, -0.04)
+
+  addRoundedBox(group, item.widthIn - 2, 3, seatDepthIn - 2, 0, seatHeightIn + 1.2, horizontalSeatZIn + 0.7, highlightColor, 3, m)
+  addRoundedBox(group, seatDepthIn - 2, 3, item.depthIn - 2, verticalSeatXIn - 0.7, seatHeightIn + 1.2, 0, highlightColor, 3, m)
+
+  for (const xIn of [-item.widthIn / 4, 0, item.widthIn / 4]) {
+    addBox(group, 0.35, 4, seatDepthIn - 2, xIn, seatHeightIn - 1, horizontalSeatZIn, seamColor, m)
+  }
+  for (const zIn of [-item.depthIn / 4, item.depthIn / 4]) {
+    addBox(group, seatDepthIn - 2, 4, 0.35, verticalSeatXIn, seatHeightIn - 1, zIn, seamColor, m)
+  }
+}
+
 function buildTymaLoungeChair(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const cushionColor = item.colors.primary
   const seamColor = item.colors.secondary ?? '#9b8d7b'
@@ -1839,6 +2204,73 @@ function buildTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMe
   }
 }
 
+function buildCastleryArlenDiningTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const topThicknessIn = 0.5
+  const apronHeightIn = 2.3
+  const legHeightIn = item.heightIn - topThicknessIn
+  const legSizeIn = 2.5
+  const stoneColor = item.colors.primary
+  const woodColor = item.colors.secondary ?? '#7a4a2c'
+  const veinColor = item.colors.accent ?? stoneColor
+
+  addRoundedBox(group, item.widthIn, topThicknessIn, item.depthIn, 0, item.heightIn - topThicknessIn / 2, 0, stoneColor, 1.2, m)
+  addRoundedBox(group, item.widthIn - 3, apronHeightIn, item.depthIn - 3, 0, item.heightIn - topThicknessIn - apronHeightIn / 2, 0, woodColor, 1.1, m)
+
+  const legXIn = item.widthIn / 2 - 5
+  const legZIn = item.depthIn / 2 - 4.2
+  for (const xIn of [-legXIn, legXIn]) {
+    for (const zIn of [-legZIn, legZIn]) {
+      addRoundedBox(group, legSizeIn, legHeightIn, legSizeIn, xIn, legHeightIn / 2, zIn, woodColor, 0.7, m)
+    }
+  }
+
+  for (const zIn of [-item.depthIn * 0.24, 0, item.depthIn * 0.24]) {
+    addBox(group, item.widthIn - 7, 0.035, 0.05, 0, item.heightIn + 0.03, zIn, veinColor, m)
+  }
+}
+
+function buildMerlynDiningTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const topThicknessIn = 1.7
+  const topYIn = item.heightIn - topThicknessIn / 2
+  const legHeightIn = item.heightIn - topThicknessIn
+  const endRadiusIn = item.depthIn / 2
+  const centerLengthIn = item.widthIn - item.depthIn
+  const woodColor = item.colors.primary
+  const darkWood = item.colors.secondary ?? woodColor
+  const grainColor = item.colors.accent ?? woodColor
+
+  addBox(group, centerLengthIn, topThicknessIn, item.depthIn, 0, topYIn, 0, woodColor, m)
+  for (const xIn of [-centerLengthIn / 2, centerLengthIn / 2]) {
+    addCylinder(group, endRadiusIn, topThicknessIn, xIn, topYIn, 0, woodColor, m)
+  }
+
+  addTaperedOvalCylinder(group, 8.2, 10.2, legHeightIn, item.widthIn * 0.22, legHeightIn / 2, 0, 1.18, darkWood, m)
+
+  const finXIn = -item.widthIn * 0.22
+  const finHeightIn = legHeightIn * 0.84
+  for (let index = 0; index < 3; index += 1) {
+    const progress = index - 1
+    addRoundedBox(
+      group,
+      4.8,
+      finHeightIn - Math.abs(progress) * 1.6,
+      item.depthIn * 0.52,
+      finXIn + progress * 2.2,
+      (finHeightIn - Math.abs(progress) * 1.6) / 2,
+      progress * 1.9,
+      darkWood,
+      1.7,
+      m,
+      0,
+      0.28 - progress * 0.12,
+    )
+  }
+
+  for (let index = -4; index <= 4; index += 1) {
+    addBox(group, item.widthIn - 7, 0.04, 0.05, 0, topYIn + 0.9, index * 2.6, grainColor, m)
+  }
+}
+
 function buildBeadTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
   const topThicknessIn = 1.8
   const topYIn = item.heightIn - topThicknessIn / 2
@@ -1905,6 +2337,34 @@ function buildFloatingConsole(group: THREE.Group, item: FurnitureDefinition, m: 
   for (const xIn of [-item.widthIn / 4, item.widthIn / 4]) {
     addBox(group, item.widthIn / 2 - 2, 0.35, 0.5, xIn, item.heightIn / 2 + 1, item.depthIn / 2 + 0.3, item.colors.accent ?? item.colors.primary, m)
   }
+}
+
+function buildMeasurementBlock(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const volume = new THREE.Mesh(
+    new THREE.BoxGeometry(m(item.widthIn), m(item.heightIn), m(item.depthIn)),
+    new THREE.MeshStandardMaterial({
+      color: item.colors.primary,
+      roughness: 0.45,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+    }),
+  )
+  volume.position.set(0, m(item.heightIn / 2), 0)
+  group.add(volume)
+
+  const outline = new THREE.LineSegments(
+    new THREE.EdgesGeometry(volume.geometry),
+    new THREE.LineBasicMaterial({ color: item.colors.primary, transparent: true, opacity: 0.95 }),
+  )
+  outline.position.copy(volume.position)
+  group.add(outline)
+
+  const guideYIn = item.heightIn + 0.6
+  addBox(group, item.widthIn, 0.18, 0.18, 0, guideYIn, -item.depthIn / 2 - 1, '#ef4444', m)
+  addBox(group, 0.18, 0.18, item.depthIn, -item.widthIn / 2 - 1, guideYIn, 0, '#22c55e', m)
+  addBox(group, 0.18, item.heightIn, 0.18, item.widthIn / 2 + 1, item.heightIn / 2, item.depthIn / 2 + 1, item.colors.accent ?? '#facc15', m)
 }
 
 function buildTaobaoFoldingTable(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
@@ -2050,6 +2510,23 @@ function addChaiseSofaLegs(
   }
 }
 
+function buildPrismSingleFridge(group: THREE.Group, item: FurnitureDefinition, m: InchesToMeters) {
+  const frontZIn = -item.depthIn / 2 - 0.08
+  const doorGapIn = 0.35
+  const upperDoorHeightIn = item.heightIn * 0.62
+  const lowerDoorHeightIn = item.heightIn - upperDoorHeightIn - doorGapIn
+  const lowerDoorCenterYIn = lowerDoorHeightIn / 2 + 1
+  const upperDoorCenterYIn = lowerDoorHeightIn + doorGapIn + upperDoorHeightIn / 2 + 1
+
+  addRoundedBox(group, item.widthIn, item.heightIn, item.depthIn, 0, item.heightIn / 2, 0, item.colors.primary, 1, m)
+  addBox(group, item.widthIn - 1.1, upperDoorHeightIn, 0.35, 0, upperDoorCenterYIn, frontZIn, item.colors.secondary ?? item.colors.primary, m)
+  addBox(group, item.widthIn - 1.1, lowerDoorHeightIn, 0.35, 0, lowerDoorCenterYIn, frontZIn, item.colors.secondary ?? item.colors.primary, m)
+  addBox(group, item.widthIn - 1.4, 0.5, 0.55, 0, lowerDoorHeightIn + 1.2, frontZIn - 0.15, item.colors.accent ?? item.colors.primary, m)
+  addBox(group, 1.1, item.heightIn - 6, 0.45, -item.widthIn / 2 + 1.3, item.heightIn / 2 + 1, frontZIn - 0.2, '#111111', m)
+  addBox(group, 1.1, item.heightIn - 10, 0.45, item.widthIn / 2 - 1.3, item.heightIn / 2 + 1, frontZIn - 0.2, '#111111', m)
+  addBox(group, item.widthIn, 2, item.depthIn - 1.2, 0, 1, 0.2, item.colors.accent ?? item.colors.primary, m)
+}
+
 function addPatternBox(
   group: THREE.Group,
   widthIn: number,
@@ -2149,6 +2626,27 @@ function addDisk(
   )
   mesh.position.set(m(xIn), m(yIn), m(zIn))
   mesh.rotation.x = Math.PI / 2
+  group.add(mesh)
+}
+
+function addTaperedOvalCylinder(
+  group: THREE.Group,
+  topRadiusIn: number,
+  bottomRadiusIn: number,
+  heightIn: number,
+  xIn: number,
+  yIn: number,
+  zIn: number,
+  zScale: number,
+  color: string,
+  m: InchesToMeters,
+) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(m(topRadiusIn), m(bottomRadiusIn), m(heightIn), 36),
+    furnitureMaterial(color),
+  )
+  mesh.position.set(m(xIn), m(yIn), m(zIn))
+  mesh.scale.z = zScale
   group.add(mesh)
 }
 

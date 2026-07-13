@@ -6,6 +6,7 @@ import {
   createFurnitureModel,
   furnitureCatalog,
   type FurnitureDefinition,
+  type FurnitureDimensionsIn,
   type FurniturePlacement,
 } from './furniture'
 
@@ -48,6 +49,17 @@ const bathroom1DoorStartXIn = 450
 const bathroom1DoorEndXIn = 480
 const bathroom1RightXIn = 515.8
 const bathroom1WidthIn = bathroom1RightXIn - bathroomDividerXIn
+const kitchenXIn = 240.2
+const kitchenZIn = 263.6
+const kitchenWidthIn = 130.9
+const kitchenDepthIn = 98.6
+const kitchenStudyEdgeXIn = 230.2
+const kitchenEntryBlockWidthIn = 16
+const kitchenEntryBlockDepthIn = kitchenDepthIn - 71.7
+const kitchenEntryBlockHeightIn = wallHeightIn
+const fridgePlatformWidthIn = 30.9
+const fridgePlatformDepthIn = 38
+const fridgePlatformHeightIn = 10 / 2.54
 const viewStyle = {
   background: '#94a3b8',
   floor: '#a9784f',
@@ -87,6 +99,16 @@ type Wall = {
   heightIn?: number
   thicknessIn?: number
   castsShadow?: boolean
+}
+
+type SolidBlock = {
+  name: string
+  xIn: number
+  zIn: number
+  widthIn: number
+  depthIn: number
+  heightIn: number
+  finish: keyof typeof finishes
 }
 
 type Window = {
@@ -282,18 +304,18 @@ const rooms: Room[] = [
   },
   {
     name: 'Kitchen',
-    xIn: 240.2,
-    zIn: 263.6,
-    widthIn: 130.9,
-    depthIn: 98.6,
+    xIn: kitchenXIn,
+    zIn: kitchenZIn,
+    widthIn: kitchenWidthIn,
+    depthIn: kitchenDepthIn,
     floor: 'kitchenFloor',
   },
   {
     name: 'Service Yard',
-    xIn: 371.1,
-    zIn: 263.6,
+    xIn: kitchenXIn + kitchenWidthIn,
+    zIn: kitchenZIn,
     widthIn: 55.1,
-    depthIn: 98.6,
+    depthIn: kitchenDepthIn,
     floor: 'bathFloor',
   },
   {
@@ -303,6 +325,27 @@ const rooms: Room[] = [
     widthIn: 141.6,
     depthIn: 75.6,
     floor: 'livingFloor',
+  },
+]
+
+const solidBlocks: SolidBlock[] = [
+  {
+    name: 'Kitchen entry block',
+    xIn: kitchenStudyEdgeXIn,
+    zIn: kitchenZIn + kitchenDepthIn - kitchenEntryBlockDepthIn,
+    widthIn: kitchenEntryBlockWidthIn,
+    depthIn: kitchenEntryBlockDepthIn,
+    heightIn: kitchenEntryBlockHeightIn,
+    finish: 'darkKitchen',
+  },
+  {
+    name: 'Fridge platform',
+    xIn: kitchenStudyEdgeXIn + kitchenEntryBlockWidthIn,
+    zIn: kitchenZIn + kitchenDepthIn - fridgePlatformDepthIn,
+    widthIn: fridgePlatformWidthIn,
+    depthIn: fridgePlatformDepthIn,
+    heightIn: fridgePlatformHeightIn,
+    finish: 'kitchenFloor',
   },
 ]
 
@@ -471,11 +514,19 @@ const doors: Door[] = [
 const canvasElement = document.querySelector<HTMLCanvasElement>('#scene')
 const viewButtons = document.querySelectorAll<HTMLButtonElement>('.view-mode')
 const displayButtons = document.querySelectorAll<HTMLButtonElement>('.display-toggle')
+const togglePricePanelButtonElement = document.querySelector<HTMLButtonElement>('#toggle-price-panel')
+const toggleCategoryCollapseButtonElement = document.querySelector<HTMLButtonElement>('#toggle-category-collapse')
+const toggleCategoryVisibilityButtonElement = document.querySelector<HTMLButtonElement>('#toggle-category-visibility')
 const furnitureCatalogElement = document.querySelector<HTMLElement>('#furniture-catalog')
+const furnitureBudgetElement = document.querySelector<HTMLElement>('#furniture-budget')
 const furnitureBudgetTotalElement = document.querySelector<HTMLElement>('#furniture-budget-total')
 const furnitureBudgetCountElement = document.querySelector<HTMLElement>('#furniture-budget-count')
 const furnitureBudgetBreakdownElement = document.querySelector<HTMLElement>('#furniture-budget-breakdown')
 const furnitureStatusElement = document.querySelector<HTMLElement>('#furniture-status')
+const measurementBlockControlsElement = document.querySelector<HTMLElement>('#measurement-block-controls')
+const measurementWidthInputElement = document.querySelector<HTMLInputElement>('#measurement-width')
+const measurementDepthInputElement = document.querySelector<HTMLInputElement>('#measurement-depth')
+const measurementHeightInputElement = document.querySelector<HTMLInputElement>('#measurement-height')
 const furnitureSelectionControls = document.querySelector<HTMLElement>('#furniture-selection-controls')
 const selectedFurnitureNameElement = document.querySelector<HTMLElement>('#selected-furniture-name')
 const rotateFurnitureButton = document.querySelector<HTMLButtonElement>('#rotate-furniture')
@@ -489,11 +540,19 @@ if (
   !canvasElement
   || viewButtons.length === 0
   || displayButtons.length === 0
+  || !togglePricePanelButtonElement
+  || !toggleCategoryCollapseButtonElement
+  || !toggleCategoryVisibilityButtonElement
   || !furnitureCatalogElement
+  || !furnitureBudgetElement
   || !furnitureBudgetTotalElement
   || !furnitureBudgetCountElement
   || !furnitureBudgetBreakdownElement
   || !furnitureStatusElement
+  || !measurementBlockControlsElement
+  || !measurementWidthInputElement
+  || !measurementDepthInputElement
+  || !measurementHeightInputElement
   || !furnitureSelectionControls
   || !selectedFurnitureNameElement
   || !rotateFurnitureButton
@@ -507,11 +566,19 @@ if (
 }
 
 const canvas = canvasElement
+const togglePricePanelButton = togglePricePanelButtonElement
+const toggleCategoryCollapseButton = toggleCategoryCollapseButtonElement
+const toggleCategoryVisibilityButton = toggleCategoryVisibilityButtonElement
 const furnitureCatalogPanel = furnitureCatalogElement
+const furnitureBudgetPanel = furnitureBudgetElement
 const furnitureBudgetTotal = furnitureBudgetTotalElement
 const furnitureBudgetCount = furnitureBudgetCountElement
 const furnitureBudgetBreakdown = furnitureBudgetBreakdownElement
 const furnitureStatus = furnitureStatusElement
+const measurementBlockControls = measurementBlockControlsElement
+const measurementWidthInput = measurementWidthInputElement
+const measurementDepthInput = measurementDepthInputElement
+const measurementHeightInput = measurementHeightInputElement
 const selectedFurnitureControls = furnitureSelectionControls
 const selectedFurnitureName = selectedFurnitureNameElement
 const rotateFurniture = rotateFurnitureButton
@@ -564,6 +631,10 @@ let draggedFurnitureModel: FurnitureModel | undefined
 let furnitureDragOffsetIn: [number, number] = [0, 0]
 let wallDragOffsetIn: [number, number] = [0, 0]
 let furnitureSelectionBox: THREE.BoxHelper | undefined
+let pendingMeasurementDimensionsIn: FurnitureDimensionsIn = { widthIn: 36, depthIn: 24, heightIn: 30 }
+let furnitureCategoriesCollapsed = false
+let furnitureCategoriesHidden = false
+let pricePanelHidden = localStorage.getItem('flatty.pricePanelHidden.v1') === 'true'
 let selectingWall = false
 let activeWallModel: WallModel | undefined
 let activeWallSide: 1 | -1 = 1
@@ -621,6 +692,10 @@ function buildFlat() {
     const dimensions = createRoomDimensionOverlay(room)
     roomDimensionOverlays.push(dimensions)
     flatModel.add(dimensions)
+  }
+
+  for (const block of solidBlocks) {
+    flatModel.add(createSolidBlock(block))
   }
 
   for (const wall of walls) {
@@ -704,6 +779,22 @@ function createFloorOutlineGeometry(outlineIn: Array<[number, number]>) {
   const geometry = new THREE.ShapeGeometry(shape)
   geometry.rotateX(Math.PI / 2)
   return geometry
+}
+
+function createSolidBlock(block: SolidBlock) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(m(block.widthIn), m(block.heightIn), m(block.depthIn)),
+    materialFor(block.finish),
+  )
+  mesh.name = block.name
+  mesh.position.set(
+    m(block.xIn + block.widthIn / 2),
+    m(block.heightIn / 2),
+    m(block.zIn + block.depthIn / 2),
+  )
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+  return mesh
 }
 
 function createWall(wall: Wall, allWalls: Wall[], allWindows: Window[]) {
@@ -1327,8 +1418,15 @@ function bindViewControls() {
   canvas.addEventListener('pointerleave', () => {
     if (!draggedFurnitureModel) canvas.style.cursor = ''
   })
+  togglePricePanelButton.addEventListener('click', togglePricePanel)
+  toggleCategoryCollapseButton.addEventListener('click', toggleCategoryCollapse)
+  toggleCategoryVisibilityButton.addEventListener('click', toggleCategoryVisibility)
   rotateFurniture.addEventListener('click', rotateSelectedFurniture)
   deleteFurniture.addEventListener('click', deleteSelectedFurniture)
+  for (const input of [measurementWidthInput, measurementDepthInput, measurementHeightInput]) {
+    input.addEventListener('change', applyMeasurementInputs)
+    input.addEventListener('blur', applyMeasurementInputs)
+  }
   selectWallButton.addEventListener('click', beginWallSelection)
   flipWallButton.addEventListener('click', flipActiveWallSide)
   exitWallButton.addEventListener('click', exitWallElevation)
@@ -1336,6 +1434,41 @@ function bindViewControls() {
   setViewMode('2d')
   setOverlayVisibility('labels', false)
   setOverlayVisibility('dimensions', false)
+  updateFurnitureMenuControls()
+  updatePricePanelVisibility()
+}
+
+function toggleCategoryCollapse() {
+  furnitureCategoriesCollapsed = !furnitureCategoriesCollapsed
+  furnitureCatalogPanel.querySelectorAll<HTMLDetailsElement>('.furniture-category').forEach((section) => {
+    section.open = !furnitureCategoriesCollapsed
+  })
+  updateFurnitureMenuControls()
+}
+
+function toggleCategoryVisibility() {
+  furnitureCategoriesHidden = !furnitureCategoriesHidden
+  updateFurnitureMenuControls()
+}
+
+function updateFurnitureMenuControls() {
+  furnitureCatalogPanel.hidden = furnitureCategoriesHidden
+  toggleCategoryVisibilityButton.textContent = furnitureCategoriesHidden ? 'Show categories' : 'Hide categories'
+  toggleCategoryVisibilityButton.setAttribute('aria-pressed', String(furnitureCategoriesHidden))
+  toggleCategoryCollapseButton.textContent = furnitureCategoriesCollapsed ? 'Expand all' : 'Collapse all'
+  toggleCategoryCollapseButton.disabled = furnitureCategoriesHidden
+}
+
+function togglePricePanel() {
+  pricePanelHidden = !pricePanelHidden
+  localStorage.setItem('flatty.pricePanelHidden.v1', String(pricePanelHidden))
+  updatePricePanelVisibility()
+}
+
+function updatePricePanelVisibility() {
+  furnitureBudgetPanel.hidden = pricePanelHidden
+  togglePricePanelButton.classList.toggle('is-active', !pricePanelHidden)
+  togglePricePanelButton.setAttribute('aria-pressed', String(!pricePanelHidden))
 }
 
 function buildFurnitureLibrary(surface: 'floor' | 'wall' = 'floor') {
@@ -1352,7 +1485,7 @@ function buildFurnitureLibrary(surface: 'floor' | 'wall' = 'floor') {
   for (const [category, definitions] of furnitureByCategory) {
     const section = document.createElement('details')
     section.className = 'furniture-category'
-    section.open = true
+    section.open = !furnitureCategoriesCollapsed
 
     const summary = document.createElement('summary')
     summary.className = 'furniture-category-heading'
@@ -1370,6 +1503,7 @@ function buildFurnitureLibrary(surface: 'floor' | 'wall' = 'floor') {
     section.append(summary, items)
     furnitureCatalogPanel.append(section)
   }
+  updateFurnitureMenuControls()
 }
 
 function createFurnitureCard(definition: FurnitureDefinition) {
@@ -1423,7 +1557,89 @@ function chooseFurnitureToPlace(definition: FurnitureDefinition) {
       ? `${definition.name} selected. Click the floor or a surface to place it.`
       : `${definition.name} selected. Click anywhere on the floor to place it.`
   updateFurnitureCatalogSelection()
+  updateMeasurementControls()
   canvas.style.cursor = 'crosshair'
+}
+
+function furnitureDefinitionForPlacement(definition: FurnitureDefinition, placement: FurniturePlacement) {
+  if (placement.surface === 'wall' || definition.kind !== 'measurementBlock' || !placement.customDimensionsIn) return definition
+  return { ...definition, ...placement.customDimensionsIn }
+}
+
+function measurementDimensionsForModel(model: FurnitureModel | undefined) {
+  if (!model || model.definition.kind !== 'measurementBlock' || model.placement.surface === 'wall') return undefined
+  return model.placement.customDimensionsIn ?? {
+    widthIn: model.definition.widthIn,
+    depthIn: model.definition.depthIn,
+    heightIn: model.definition.heightIn,
+  }
+}
+
+function applyMeasurementInputs() {
+  const dimensions = readMeasurementInputs()
+  pendingMeasurementDimensionsIn = dimensions
+  const model = selectedFurnitureModel
+  if (!model || model.definition.kind !== 'measurementBlock' || model.placement.surface === 'wall') return
+
+  model.placement.customDimensionsIn = dimensions
+  rebuildFurnitureModel(model)
+  selectFurnitureModel(model)
+  saveFurniturePlacements()
+  furnitureStatus.textContent = `Measurement block resized to ${formatDimensionsIn(dimensions)}.`
+}
+
+function readMeasurementInputs(): FurnitureDimensionsIn {
+  return {
+    widthIn: readDimensionInput(measurementWidthInput, pendingMeasurementDimensionsIn.widthIn, 1, 360),
+    depthIn: readDimensionInput(measurementDepthInput, pendingMeasurementDimensionsIn.depthIn, 1, 360),
+    heightIn: readDimensionInput(measurementHeightInput, pendingMeasurementDimensionsIn.heightIn, 1, 144),
+  }
+}
+
+function readDimensionInput(input: HTMLInputElement, fallback: number, min: number, max: number) {
+  const value = Number(input.value)
+  const clamped = Number.isFinite(value) ? THREE.MathUtils.clamp(value, min, max) : fallback
+  input.value = String(clamped)
+  return clamped
+}
+
+function updateMeasurementControls() {
+  const activeDefinition = activeFurnitureDefinitionId ? furnitureCatalog.find((item) => item.id === activeFurnitureDefinitionId) : undefined
+  const selectedDimensions = measurementDimensionsForModel(selectedFurnitureModel)
+  const showControls = Boolean(selectedDimensions || activeDefinition?.kind === 'measurementBlock')
+  measurementBlockControls.hidden = !showControls
+  if (!showControls) return
+
+  const dimensions = selectedDimensions ?? pendingMeasurementDimensionsIn
+  measurementWidthInput.value = String(dimensions.widthIn)
+  measurementDepthInput.value = String(dimensions.depthIn)
+  measurementHeightInput.value = String(dimensions.heightIn)
+}
+
+function formatDimensionsIn(dimensions: FurnitureDimensionsIn) {
+  return `${dimensions.widthIn} × ${dimensions.depthIn} × ${dimensions.heightIn} in`
+}
+
+function rebuildFurnitureModel(model: FurnitureModel) {
+  const oldGroup = model.group
+  const newGroup = createFurnitureModel(furnitureDefinitionForPlacement(model.definition, model.placement), m)
+  newGroup.position.copy(oldGroup.position)
+  newGroup.rotation.copy(oldGroup.rotation)
+  newGroup.traverse((object) => { object.userData.furnitureModel = model })
+  furnitureLayer.remove(oldGroup)
+  disposeObjectTree(oldGroup)
+  model.group = newGroup
+  furnitureLayer.add(newGroup)
+}
+
+function disposeObjectTree(object: THREE.Object3D) {
+  object.traverse((child) => {
+    if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
+      child.geometry.dispose()
+      if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose())
+      else child.material.dispose()
+    }
+  })
 }
 
 function addFurniturePlacement(placement: FurniturePlacement) {
@@ -1431,7 +1647,7 @@ function addFurniturePlacement(placement: FurniturePlacement) {
   if (!definition) return undefined
   if (placement.surface === 'wall' && !wallModels.some((wall) => wall.id === placement.wallId)) return undefined
 
-  const group = createFurnitureModel(definition, m)
+  const group = createFurnitureModel(furnitureDefinitionForPlacement(definition, placement), m)
   const model: FurnitureModel = { placement, definition, group }
   updateFurnitureTransform(model)
   group.traverse((object) => { object.userData.furnitureModel = model })
@@ -1541,6 +1757,7 @@ function handleScenePointerDown(event: PointerEvent) {
     if (model) updateFurnitureTransform(model)
     activeFurnitureDefinitionId = undefined
     updateFurnitureCatalogSelection()
+    updateMeasurementControls()
     selectFurnitureModel(model)
     saveFurniturePlacements()
     furnitureStatus.textContent = `${definition.name} mounted. Drag it to adjust its position.`
@@ -1561,9 +1778,11 @@ function handleScenePointerDown(event: PointerEvent) {
       zIn: surfacePoint ? surfacePoint[2] : floorPoint![1],
       elevationIn: surfacePoint ? surfacePoint[1] : 0,
       rotationDegrees: 0,
+      customDimensionsIn: definition.kind === 'measurementBlock' ? { ...pendingMeasurementDimensionsIn } : undefined,
     })
     activeFurnitureDefinitionId = undefined
     updateFurnitureCatalogSelection()
+    updateMeasurementControls()
     selectFurnitureModel(model)
     saveFurniturePlacements()
     furnitureStatus.textContent = `${definition.name} placed. Drag it to move or use Rotate 15°.`
@@ -1737,6 +1956,7 @@ function selectFurnitureModel(model: FurnitureModel | undefined) {
     furnitureSelectionBox.material.dispose()
     furnitureSelectionBox = undefined
   }
+  updateMeasurementControls()
   if (model) {
     furnitureSelectionBox = new THREE.BoxHelper(model.group, '#60a5fa')
     furnitureSelectionBox.name = `${model.definition.name} selection`
@@ -1761,12 +1981,7 @@ function deleteSelectedFurniture() {
   furnitureLayer.remove(model.group)
   const index = furnitureModels.indexOf(model)
   if (index >= 0) furnitureModels.splice(index, 1)
-  model.group.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return
-    object.geometry.dispose()
-    if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose())
-    else object.material.dispose()
-  })
+  disposeObjectTree(model.group)
   selectFurnitureModel(undefined)
   saveFurniturePlacements()
   updateFurnitureBudget()
@@ -1806,6 +2021,7 @@ function handleFurnitureKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && activeFurnitureDefinitionId) {
     activeFurnitureDefinitionId = undefined
     updateFurnitureCatalogSelection()
+    updateMeasurementControls()
     furnitureStatus.textContent = 'Placement cancelled. Choose an item to start.'
     canvas.style.cursor = ''
   } else if (event.key === 'Escape' && selectingWall) {
@@ -1871,6 +2087,18 @@ function isFurniturePlacement(value: unknown): value is FurniturePlacement {
     && Number.isFinite(placement.zIn)
     && Number.isFinite(placement.rotationDegrees)
     && (placement.elevationIn === undefined || Number.isFinite(placement.elevationIn))
+    && (placement.customDimensionsIn === undefined || isFurnitureDimensions(placement.customDimensionsIn))
+}
+
+function isFurnitureDimensions(value: unknown): value is FurnitureDimensionsIn {
+  if (!value || typeof value !== 'object') return false
+  const dimensions = value as Record<string, unknown>
+  return Number.isFinite(dimensions.widthIn)
+    && Number.isFinite(dimensions.depthIn)
+    && Number.isFinite(dimensions.heightIn)
+    && (dimensions.widthIn as number) > 0
+    && (dimensions.depthIn as number) > 0
+    && (dimensions.heightIn as number) > 0
 }
 
 function beginWallSelection() {

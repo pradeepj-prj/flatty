@@ -1,6 +1,6 @@
 ---
 name: flatty-git-workflow
-description: Project git workflow for Flatty. Use before any code or documentation change: pull/check remote changes, create or switch to a task branch, make changes there, and ask whether a PR should be created after completing changes.
+description: "Project git workflow for Flatty. Use before any code or documentation change: pull/check remote changes, create or switch to a task branch, make changes there, and ask whether a PR should be created after completing changes."
 ---
 
 # Flatty Git Workflow

@@ -1,6 +1,6 @@
 ---
 name: flatty-minimal-code
-description: Flatty coding style. Use during implementation and refactoring to avoid overengineering: prefer fewer cohesive files, simple data shapes, direct solutions, and minimal dependencies.
+description: "Flatty coding style. Use during implementation and refactoring to avoid overengineering: prefer fewer cohesive files, simple data shapes, direct solutions, and minimal dependencies."
 ---
 
 # Flatty Minimal Code
